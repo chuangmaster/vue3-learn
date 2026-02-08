@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>05 - Composables 深入學習</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .example {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #16a085;
+            border-radius: 5px;
+            background: #e8f8f5;
+        }
+        .code {
+            background: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            font-size: 0.9em;
+        }
+        button {
+            background: #16a085;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #138d75;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px;
+        }
+        .highlight {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .tip-box {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .best-practice {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .warning {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .composable-demo {
+            border: 2px dashed #16a085;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            background: #f0fcfa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧩 第五課：Composables 深入學習</h1>
+        
+        <h2>🎯 什麼是 Composables？</h2>
+        <p>Composables 是利用 Vue 的 Composition API 來封裝和復用**有狀態邏輯**的函數。它們讓我們能夠將組件邏輯抽取到外部函數中，實現邏輯復用。</p>
+        
+        <div class="highlight">
+            <strong>💡 核心概念：</strong><br>
+            • 以 <code>use</code> 為前綴命名<br>
+            • 封裝響應式狀態和相關邏輯<br>
+            • 可以在multiple組件中復用<br>    
+            • 支持組合和嵌套使用
+        </div>
+
+        <!-- 範例 1：簡單的計數器 Composable -->
+        <div class="example">
+            <h3>範例 1：基礎 Composable - useCounter</h3>
+            <div class="composable-demo">
+                <div id="app1"></div>
+            </div>
+            <div class="code">
+// composables/useCounter.js
+function useCounter(initialValue = 0) {
+  const count = Vue.ref(initialValue)
+  
+  function increment() {
+    count.value++
+  }
+  
+  function decrement() {
+    count.value--
+  }
+  
+  function reset() {
+    count.value = initialValue
+  }
+  
+  // 返回響應式狀態和方法
+  return {
+    count,
+    increment,
+    decrement,
+    reset
+  }
+}
+
+// 在組件中使用
+setup() {
+  const { count, increment, decrement, reset } = useCounter(10)
+  return { count, increment, decrement, reset }
+}</div>
+            
+            <div class="best-practice">
+                <strong>✅ 最佳實踐：</strong>Composable 應該只返回 refs，這樣在解構時能保持響應式。
+            </div>
+        </div>
+
+        <!-- 範例 2：滑鼠位置追踪 -->
+        <div class="example">
+            <h3>範例 2：實用 Composable - useMouse</h3>
+            <div class="composable-demo">
+                <div id="app2"></div>
+            </div>
+            <div class="code">
+// composables/useMouse.js
+function useMouse() {
+  const x = Vue.ref(0)
+  const y = Vue.ref(0)
+  
+  function updateMouse(event) {
+    x.value = event.pageX
+    y.value = event.pageY
+  }
+  
+  Vue.onMounted(() => {
+    window.addEventListener('mousemove', updateMouse)
+  })
+  
+  Vue.onUnmounted(() => {
+    window.removeEventListener('mousemove', updateMouse)
+  })
+  
+  return { x, y }
+}</div>
+            
+            <div class="tip-box">
+                <strong>🖱️ 實際應用：</strong>這個 Composable 可以用於拖拽、懸停效果、繪圖應用等場景。
+            </div>
+        </div>
+
+        <!-- 範例 3：本地儲存 -->
+        <div class="example">
+            <h3>範例 3：本地儲存 Composable - useLocalStorage</h3>
+            <div class="composable-demo">
+                <div id="app3"></div>
+            </div>
+            <div class="code">
+// composables/useLocalStorage.js
+function useLocalStorage(key, defaultValue) {
+  // 從 localStorage 讀取初始值
+  function read() {
+    try {
+      const item = window.localStorage.getItem(key)
+      return item ? JSON.parse(item) : defaultValue
+    } catch {
+      return defaultValue
+    }
+  }
+  
+  const storedValue = Vue.ref(read())
+  
+  // 寫入 localStorage
+  function setValue(value) {
+    try {
+      storedValue.value = value
+      window.localStorage.setItem(key, JSON.stringify(value))
+    } catch (error) {
+      console.error(`Error setting localStorage key "${key}":`, error)
+    }
+  }
+  
+  return [storedValue, setValue]
+}</div>
+        </div>
+
+        <!-- 範例 4：API 請求 Composable -->
+        <div class="example">
+            <h3>範例 4：API 請求 Composable - useFetch</h3>
+            <div class="composable-demo">
+                <div id="app4"></div>
+            </div>
+            <div class="code">
+// composables/useFetch.js
+function useFetch(url) {
+  const data = Vue.ref(null)
+  const error = Vue.ref(null)
+  const loading = Vue.ref(false)
+  
+  async function fetchData() {
+    loading.value = true
+    error.value = null
+    
+    try {
+      // 模擬 API 請求延遲
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // 模擬成功/失敗
+      if (Math.random() > 0.7) {
+        throw new Error('網路錯誤')
+      }
+      
+      // 模擬 API 響應數據
+      data.value = {
+        users: [
+          { id: 1, name: '張小明' },
+          { id: 2, name: '李小華' },
+          { id: 3, name: '王小美' }
+        ],
+        timestamp: new Date().toISOString()
+      }
+    } catch (err) {
+      error.value = err.message
+    } finally {
+      loading.value = false
+    }
+  }
+  
+  // 自動執行一次請求
+  Vue.onMounted(fetchData)
+  
+  return {
+    data,
+    error,
+    loading,
+    refetch: fetchData
+  }
+}</div>
+        </div>
+
+        <!-- 範例 5：表單驗証 Composable -->
+        <div class="example">
+            <h3>範例 5：表單驗証 Composable - useForm</h3>
+            <div class="composable-demo">
+                <div id="app5"></div>
+            </div>
+            <div class="code">
+// composables/useForm.js
+function useForm(initialValues, validationRules) {
+  const values = Vue.reactive({ ...initialValues })
+  const errors = Vue.reactive({})
+  const touched = Vue.reactive({})
+  
+  function validateField(fieldName) {
+    const rules = validationRules[fieldName]
+    if (!rules) return true
+    
+    const value = values[fieldName]
+    
+    if (rules.required && !value) {
+      errors[fieldName] = '此欄位為必填'
+      return false
+    }
+    
+    if (rules.minLength && value.length < rules.minLength) {
+      errors[fieldName] = `最少需要 ${rules.minLength} 個字符`
+      return false
+    }
+    
+    if (rules.email && !/\S+@\S+\.\S+/.test(value)) {
+      errors[fieldName] = '請輸入有效的 Email 地址'
+      return false
+    }
+    
+    delete errors[fieldName]
+    return true
+  }
+  
+  function validateAll() {
+    let isValid = true
+    for (const fieldName in validationRules) {
+      if (!validateField(fieldName)) {
+        isValid = false
+      }
+    }
+    return isValid
+  }
+  
+  function handleInput(fieldName, value) {
+    values[fieldName] = value
+    touched[fieldName] = true
+    validateField(fieldName)
+  }
+  
+  const isValid = Vue.computed(() => {
+    return Object.keys(errors).length === 0
+  })
+  
+  return {
+    values,
+    errors,
+    touched,
+    isValid,
+    handleInput,
+    validateAll
+  }
+}</div>
+        </div>
+
+        <!-- 範例 6：組合多個 Composables -->
+        <div class="example">
+            <h3>範例 6：組合使用多個 Composables</h3>
+            <div class="composable-demo">
+                <div id="app6"></div>
+            </div>
+            <div class="code">
+// 在一個組件中組合使用多個 Composables
+setup() {
+  // 滑鼠追踪
+  const { x: mouseX, y: mouseY } = useMouse()
+  
+  // 計數器
+  const { count, increment } = useCounter(0)
+  
+  // 本地儲存
+  const [theme, setTheme] = useLocalStorage('theme', 'light')
+  
+  // 組合邏輯
+  const mouseDistance = Vue.computed(() => {
+    return Math.sqrt(mouseX.value ** 2 + mouseY.value ** 2)
+  })
+  
+  function toggleTheme() {
+    setTheme(theme.value === 'light' ? 'dark' : 'light')
+  }
+  
+  return {
+    mouseX,
+    mouseY,
+    mouseDistance,
+    count,
+    increment,
+    theme,
+    toggleTheme
+  }
+}</div>
+            
+            <div class="highlight">
+                <strong>🔗 組合的力量：</strong>Composables 可以互相組合，創建更複雜的功能！
+            </div>
+        </div>
+
+        <!-- 範例 7：進階 Composable 模式 -->
+        <div class="example">
+            <h3>範例 7：進階模式 - useToggle 與 useTimeout</h3>
+            <div class="composable-demo">
+                <div id="app7"></div>
+            </div>
+            <div class="code">
+// composables/useToggle.js
+function useToggle(initialValue = false) {
+  const value = Vue.ref(initialValue)
+  
+  function toggle() {
+    value.value = !value.value
+  }
+  
+  function setTrue() {
+    value.value = true
+  }
+  
+  function setFalse() {
+    value.value = false
+  }
+  
+  return [value, { toggle, setTrue, setFalse }]
+}
+
+// composables/useTimeout.js  
+function useTimeout(callback, delay) {
+  const isActive = Vue.ref(false)
+  let timeoutId
+  
+  function start() {
+    isActive.value = true
+    timeoutId = setTimeout(() => {
+      callback()
+      isActive.value = false
+    }, delay)
+  }
+  
+  function stop() {
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+      isActive.value = false
+    }
+  }
+  
+  Vue.onUnmounted(stop)
+  
+  return { isActive, start, stop }
+}</div>
+        </div>
+
+        <h2>📚 Composables 設計原則</h2>
+
+        <div class="best-practice">
+            <h3>✅ 最佳實踐</h3>
+            <ul>
+                <li><strong>命名約定：</strong>以 <code>use</code> 開頭</li>
+                <li><strong>返回一致性：</strong>總是返回 refs，保持響應式</li>
+                <li><strong>單一職責：</strong>每個 Composable 專注於一個特定功能</li>
+                <li><strong>可組合性：</strong>設計時考慮與其他 Composables 的組合</li>
+                <li><strong>生命週期清理：</strong>妥善管理副作用和資源清理</li>
+            </ul>
+        </div>
+
+        <div class="warning">
+            <h3>⚠️ 常見陷阱</h3>
+            <ul>
+                <li><strong>返回普通值：</strong>確保返回 ref 或 reactive 對象</li>
+                <li><strong>忘記清理：</strong>在 onUnmounted 中清理事件監聽器</li>
+                <li><strong>過度抽象：</strong>不要為了抽象而抽象，保持簡單</li>
+                <li><strong>狀態洩漏：</strong>避免在 Composable 中使用全局狀態</li>
+            </ul>
+        </div>
+
+        <div class="tip-box">
+            <h3>💡 何時使用 Composables？</h3>
+            <ul>
+                <li>有狀態的邏輯需要在多個組件之間復用</li>
+                <li>複雜的狀態管理和副作用需要封裝</li>
+                <li>與瀏覽器 API 的互動（localStorage、事件監聽等）</li>
+                <li>API 請求和數據管理</li>
+                <li>表單處理和驗証邏輯</li>
+            </ul>
+        </div>
+
+        <h2>📖 重點總結</h2>
+        <ul>
+            <li><strong>Composables</strong> 是 Vue 3 中復用邏輯的強大工具</li>
+            <li>遵循 <strong>use-</strong> 命名約定，返回響應式數據</li>
+            <li>可以<strong>組合使用</strong>多個 Composables 創建複雜功能</li>
+            <li>適合封裝與<strong>瀏覽器 API</strong>、<strong>狀態管理</strong>相關的邏輯</li>
+            <li>注意<strong>生命週期管理</strong>和<strong>資源清理</strong></li>
+        </ul>
+
+        <h2>🎯 下一步</h2>
+        <ul>
+            <li><a href="04-lifecycle.html">← 上一課：生命週期鉤子</a></li>
+            <li><a href="06-advanced.html">下一課：進階特性 →</a></li>
+        </ul>
+    </div>
+
+    <script>
+        const { createApp, ref, reactive, computed, onMounted, onUnmounted, watch } = Vue
+        
+        // Composables 定義
+        
+        // useCounter Composable
+        function useCounter(initialValue = 0) {
+            const count = ref(initialValue)
+            
+            function increment() {
+                count.value++
+            }
+            
+            function decrement() {
+                count.value--
+            }
+            
+            function reset() {
+                count.value = initialValue
+            }
+            
+            return {
+                count,
+                increment,
+                decrement,
+                reset
+            }
+        }
+        
+        // useMouse Composable
+        function useMouse() {
+            const x = ref(0)
+            const y = ref(0)
+            
+            function updateMouse(event) {
+                x.value = event.clientX
+                y.value = event.clientY
+            }
+            
+            onMounted(() => {
+                window.addEventListener('mousemove', updateMouse)
+            })
+            
+            onUnmounted(() => {
+                window.removeEventListener('mousemove', updateMouse)
+            })
+            
+            return { x, y }
+        }
+        
+        // useLocalStorage Composable
+        function useLocalStorage(key, defaultValue) {
+            function read() {
+                try {
+                    const item = window.localStorage.getItem(key)
+                    return item ? JSON.parse(item) : defaultValue
+                } catch {
+                    return defaultValue
+                }
+            }
+            
+            const storedValue = ref(read())
+            
+            function setValue(value) {
+                try {
+                    storedValue.value = value
+                    window.localStorage.setItem(key, JSON.stringify(value))
+                } catch (error) {
+                    console.error(`Error setting localStorage key "${key}":`, error)
+                }
+            }
+            
+            return [storedValue, setValue]
+        }
+        
+        // useFetch Composable
+        function useFetch() {
+            const data = ref(null)
+            const error = ref(null)
+            const loading = ref(false)
+            
+            async function fetchData() {
+                loading.value = true
+                error.value = null
+                
+                try {
+                    await new Promise(resolve => setTimeout(resolve, 1000))
+                    
+                    if (Math.random() > 0.7) {
+                        throw new Error('模擬網路錯誤')
+                    }
+                    
+                    data.value = {
+                        users: [
+                            { id: 1, name: '張小明', role: '開發者' },
+                            { id: 2, name: '李小華', role: '設計師' },
+                            { id: 3, name: '王小美', role: '產品經理' },
+                            { id: 4, name: '陳大雄', role: 'QA 工程師' }
+                        ],
+                        timestamp: new Date().toLocaleTimeString()
+                    }
+                } catch (err) {
+                    error.value = err.message
+                } finally {
+                    loading.value = false
+                }
+            }
+            
+            return {
+                data,
+                error,
+                loading,
+                refetch: fetchData
+            }
+        }
+        
+        // useForm Composable
+        function useForm(initialValues, validationRules) {
+            const values = reactive({ ...initialValues })
+            const errors = reactive({})
+            const touched = reactive({})
+            
+            function validateField(fieldName) {
+                const rules = validationRules[fieldName]
+                if (!rules) return true
+                
+                const value = values[fieldName]
+                
+                if (rules.required && !value) {
+                    errors[fieldName] = '此欄位為必填'
+                    return false
+                }
+                
+                if (rules.minLength && value.length < rules.minLength) {
+                    errors[fieldName] = `最少需要 ${rules.minLength} 個字符`
+                    return false
+                }
+                
+                if (rules.email && !/\S+@\S+\.\S+/.test(value)) {
+                    errors[fieldName] = '請輸入有效的 Email 地址'
+                    return false
+                }
+                
+                delete errors[fieldName]
+                return true
+            }
+            
+            function validateAll() {
+                let isValid = true
+                for (const fieldName in validationRules) {
+                    if (!validateField(fieldName)) {
+                        isValid = false
+                    }
+                }
+                return isValid
+            }
+            
+            function handleInput(fieldName, value) {
+                values[fieldName] = value
+                touched[fieldName] = true
+                validateField(fieldName)
+            }
+            
+            const isValid = computed(() => {
+                return Object.keys(errors).length === 0
+            })
+            
+            return {
+                values,
+                errors,
+                touched,
+                isValid,
+                handleInput,
+                validateAll
+            }
+        }
+        
+        // useToggle Composable
+        function useToggle(initialValue = false) {
+            const value = ref(initialValue)
+            
+            function toggle() {
+                value.value = !value.value
+            }
+            
+            function setTrue() {
+                value.value = true
+            }
+            
+            function setFalse() {
+                value.value = false
+            }
+            
+            return [value, { toggle, setTrue, setFalse }]
+        }
+        
+        // useTimeout Composable
+        function useTimeout(callback, delay) {
+            const isActive = ref(false)
+            let timeoutId
+            
+            function start() {
+                if (timeoutId) {
+                    clearTimeout(timeoutId)
+                }
+                isActive.value = true
+                timeoutId = setTimeout(() => {
+                    callback()
+                    isActive.value = false
+                }, delay)
+            }
+            
+            function stop() {
+                if (timeoutId) {
+                    clearTimeout(timeoutId)
+                    isActive.value = false
+                }
+            }
+            
+            onUnmounted(stop)
+            
+            return { isActive, start, stop }
+        }
+        
+        // 應用實例
+        
+        // 範例 1：基礎計數器
+        createApp({
+            template: `
+                <div>
+                    <h4>🧮 計數器 Composable</h4>
+                    <p>計數：{{ count }}</p>
+                    <button @click="increment">+1</button>
+                    <button @click="decrement">-1</button>
+                    <button @click="reset">重置</button>
+                </div>
+            `,
+            setup() {
+                const { count, increment, decrement, reset } = useCounter(10)
+                return { count, increment, decrement, reset }
+            }
+        }).mount('#app1')
+        
+        // 範例 2：滑鼠追踪
+        createApp({
+            template: `
+                <div>
+                    <h4>🖱️ 滑鼠位置追踪</h4>
+                    <p>滑鼠位置：{{ x }}, {{ y }}</p>
+                    <p>距離原點：{{ distance.toFixed(0) }} px</p>
+                    <div style="width: 100%; height: 100px; background: #f0f8ff; border: 2px dashed #16a085; 
+                                display: flex; align-items: center; justify-content: center; margin: 10px 0;">
+                        在此區域移動滑鼠試試
+                    </div>
+                </div>
+            `,
+            setup() {
+                const { x, y } = useMouse()
+                
+                const distance = computed(() => {
+                    return Math.sqrt(x.value ** 2 + y.value ** 2)
+                })
+                
+                return { x, y, distance }
+            }
+        }).mount('#app2')
+        
+        // 範例 3：本地儲存
+        createApp({
+            template: `
+                <div>
+                    <h4>💾 本地儲存</h4>
+                    <p>當前名字：{{ name || '（未設置）' }}</p>
+                    <input v-model="inputName" placeholder="輸入你的名字">
+                    <button @click="saveName">💾 保存到 localStorage</button>
+                    <button @click="clearName">🗑️ 清除</button>
+                    <p><small>重新加載頁面後數據仍然存在</small></p>
+                </div>
+            `,
+            setup() {
+                const [name, setName] = useLocalStorage('userName', '')
+                const inputName = ref('')
+                
+                function saveName() {
+                    if (inputName.value.trim()) {
+                        setName(inputName.value.trim())
+                        inputName.value = ''
+                    }
+                }
+                
+                function clearName() {
+                    setName('')
+                }
+                
+                return { name, inputName, saveName, clearName }
+            }
+        }).mount('#app3')
+        
+        // 範例 4：API 請求
+        createApp({
+            template: `
+                <div>
+                    <h4>📡 API 請求</h4>
+                    <button @click="refetch" :disabled="loading">
+                        {{ loading ? '⏳ 載入中...' : '🔄 獲取用戶數據' }}
+                    </button>
+                    
+                    <div v-if="error" style="color: red; margin: 10px 0;">
+                        ❌ 錯誤：{{ error }}
+                    </div>
+                    
+                    <div v-if="data && !loading">
+                        <h5>👥 用戶列表 ({{ data.timestamp }})：</h5>
+                        <ul>
+                            <li v-for="user in data.users" :key="user.id">
+                                {{ user.name }} - {{ user.role }}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            `,
+            setup() {
+                const { data, error, loading, refetch } = useFetch()
+                return { data, error, loading, refetch }
+            }
+        }).mount('#app4')
+        
+        // 範例 5：表單驗証
+        createApp({
+            template: `
+                <div>
+                    <h4>📝 表單驗証</h4>
+                    <form @submit.prevent="handleSubmit">
+                        <div style="margin: 10px 0;">
+                            <input 
+                                :value="values.name"
+                                @input="handleInput('name', $event.target.value)"
+                                placeholder="姓名 (必填，至少 2 字符)"
+                                :style="errors.name ? 'border-color: red' : ''"
+                            >
+                            <div v-if="errors.name" style="color: red; font-size: 0.9em;">
+                                {{ errors.name }}
+                            </div>
+                        </div>
+                        
+                        <div style="margin: 10px 0;">
+                            <input 
+                                :value="values.email"
+                                @input="handleInput('email', $event.target.value)"
+                                placeholder="Email (必填)"
+                                :style="errors.email ? 'border-color: red' : ''"
+                            >
+                            <div v-if="errors.email" style="color: red; font-size: 0.9em;">
+                                {{ errors.email }}
+                            </div>
+                        </div>
+                        
+                        <button type="submit" :disabled="!isValid">
+                            {{ isValid ? '✅ 提交' : '❌ 請修正錯誤' }}
+                        </button>
+                    </form>
+                    
+                    <div v-if="submitMessage" style="margin: 10px 0; color: green;">
+                        {{ submitMessage }}
+                    </div>
+                </div>
+            `,
+            setup() {
+                const { values, errors, touched, isValid, handleInput, validateAll } = useForm(
+                    { name: '', email: '' },
+                    {
+                        name: { required: true, minLength: 2 },
+                        email: { required: true, email: true }
+                    }
+                )
+                
+                const submitMessage = ref('')
+                
+                function handleSubmit() {
+                    if (validateAll()) {
+                        submitMessage.value = `✅ 表單提交成功！姓名：${values.name}，Email：${values.email}`
+                        setTimeout(() => {
+                            submitMessage.value = ''
+                        }, 3000)
+                    }
+                }
+                
+                return {
+                    values,
+                    errors,
+                    isValid,
+                    handleInput,
+                    handleSubmit,
+                    submitMessage
+                }
+            }
+        }).mount('#app5')
+        
+        // 範例 6：組合使用
+        createApp({
+            template: `
+                <div>
+                    <h4>🔗 組合使用多個 Composables</h4>
+                    <p>主題：{{ theme }} | 滑鼠：({{ mouseX }}, {{ mouseY }}) | 計數：{{ count }}</p>
+                    <p>滑鼠距離原點：{{ mouseDistance.toFixed(0) }} px</p>
+                    
+                    <button @click="toggleTheme">
+                        🎨 切換主題 ({{ theme === 'light' ? '→ 深色' : '→ 淺色' }})
+                    </button>
+                    <button @click="increment">📊 計數 +1</button>
+                </div>
+            `,
+            setup() {
+                const { x: mouseX, y: mouseY } = useMouse()
+                const { count, increment } = useCounter(0)
+                const [theme, setTheme] = useLocalStorage('composable-theme', 'light')
+                
+                const mouseDistance = computed(() => {
+                    return Math.sqrt(mouseX.value ** 2 + mouseY.value ** 2)
+                })
+                
+                function toggleTheme() {
+                    setTheme(theme.value === 'light' ? 'dark' : 'light')
+                }
+                
+                return {
+                    mouseX,
+                    mouseY,
+                    mouseDistance,
+                    count,
+                    increment,
+                    theme,
+                    toggleTheme
+                }
+            }
+        }).mount('#app6')
+        
+        // 範例 7：進階模式
+        createApp({
+            template: `
+                <div>
+                    <h4>⏰ 進階組合：Toggle + Timeout</h4>
+                    <p>消息顯示狀態：{{ isVisible ? '🟢 顯示中' : '🔴 已隱藏' }}</p>
+                    
+                    <div v-if="isVisible" style="background: #d4edda; border: 1px solid #c3e6cb; 
+                                                 padding: 10px; border-radius: 4px; margin: 10px 0;">
+                        {{ message }}
+                    </div>
+                    
+                    <div>
+                        <button @click="actions.toggle">
+                            {{ isVisible ? '隱藏' : '顯示' }} 消息
+                        </button>
+                        <button @click="showTemporarily" :disabled="timeoutActive">
+                            {{ timeoutActive ? '⏳ 自動隱藏中...' : '⏰ 顯示 3 秒' }}
+                        </button>
+                        <button @click="actions.setFalse">🔴 立即隱藏</button>
+                    </div>
+                    
+                    <p><small>示範了 useToggle 和 useTimeout 的組合使用</small></p>
+                </div>
+            `,
+            setup() {
+                const [isVisible, actions] = useToggle(false)
+                const message = ref('🎉 這是一條臨時消息！')
+                
+                const { isActive: timeoutActive, start: startTimeout } = useTimeout(() => {
+                    actions.setFalse()
+                }, 3000)
+                
+                function showTemporarily() {
+                    actions.setTrue()
+                    startTimeout()
+                }
+                
+                return {
+                    isVisible,
+                    actions,
+                    message,
+                    timeoutActive,
+                    showTemporarily
+                }
+            }
+        }).mount('#app7')
+    </script>
+</body>
+</html>

@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>02 - 響應式系統與 Refs</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .example {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #27ae60;
+            border-radius: 5px;
+            background: #f0fff0;
+        }
+        .code {
+            background: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+        }
+        button {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #229954;
+        }
+        .highlight {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .warning {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .info-box {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 第二課：響應式系統與 Refs</h1>
+        
+        <h2>🔍 深入理解 Vue 3 的響應式系統</h2>
+        <p>Vue 3 的響應式系統是基於 Proxy 的，提供了更強大和靈活的響應式能力。</p>
+        
+        <!-- 範例 1：ref vs reactive -->
+        <div class="example">
+            <h3>範例 1：ref() vs reactive() 的區別</h3>
+            <div id="app1"></div>
+            <div class="code">
+// ref() - 用於基本數據類型
+const count = ref(0)           // 數字
+const message = ref('Hello')   // 字符串
+const isVisible = ref(true)    // 布爾值
+
+// reactive() - 用於對象和數組
+const state = reactive({
+  count: 0,
+  user: {
+    name: '小明',
+    age: 25
+  },
+  numbers: [1, 2, 3]
+})
+
+// 訪問方式的差異
+console.log(count.value)       // ref 需要 .value
+console.log(state.count)       // reactive 直接訪問</div>
+            
+            <div class="highlight">
+                <strong>💡 何時使用 ref() vs reactive()？</strong><br>
+                • <strong>ref()</strong>：基本數據類型（string, number, boolean）<br>
+                • <strong>reactive()</strong>：對象和數組
+            </div>
+        </div>
+        
+        <!-- 範例 2：響應式的深層理解 -->
+        <div class="example">
+            <h3>範例 2：響應式的工作原理</h3>
+            <div id="app2"></div>
+            <div class="code">
+setup() {
+  const count = ref(0)
+  const state = reactive({
+    name: 'Vue 3',
+    features: ['Composition API', 'TypeScript', 'Performance']
+  })
+  
+  // 修改會觸發界面更新
+  function updateCount() {
+    count.value++  // 🔄 響應式更新
+  }
+  
+  function addFeature() {
+    state.features.push('New Feature!')  // 🔄 響應式更新
+  }
+}</div>
+            
+            <div class="info-box">
+                <strong>🔍 幕後原理：</strong>Vue 3 使用 Proxy 來攔截對象的讀取和修改操作，當數據發生變化時，會自動更新所有依賴該數據的組件。
+            </div>
+        </div>
+        
+        <!-- 範例 3：嵌套對象的響應式 -->
+        <div class="example">
+            <h3>範例 3：嵌套對象的響應式處理</h3>
+            <div id="app3"></div>
+            <div class="code">
+setup() {
+  const user = reactive({
+    info: {
+      name: '張三',
+      age: 30,
+      address: {
+        city: '台北',
+        street: '信義路'
+      }
+    },
+    hobbies: ['讀書', '游泳']
+  })
+  
+  // 深層嵌套的修改也是響應式的
+  function updateCity() {
+    user.info.address.city = '高雄'  // ✅ 響應式
+  }
+  
+  function addHobby() {
+    user.hobbies.push('騎車')  // ✅ 響應式
+  }
+}</div>
+            
+            <div class="highlight">
+                <strong>✨ Vue 3 的優勢：</strong>無論對象嵌套多深，所有層級的變化都是響應式的！
+            </div>
+        </div>
+        
+        <!-- 範例 4：響應式的注意事項 -->
+        <div class="example">
+            <h3>範例 4：常見陷阱與解決方案</h3>
+            <div id="app4"></div>
+            <div class="code">
+setup() {
+  const state = reactive({ count: 0 })
+  
+  // ❌ 錯誤：失去響應式
+  let { count } = state
+  count++  // 這不會觸發更新！
+  
+  // ✅ 正確：保持響應式
+  function increment() {
+    state.count++  // 直接修改原對象
+  }
+  
+  // ✅ 使用 toRefs 解構
+  const { count: reactiveCount } = toRefs(state)
+  // 現在 reactiveCount 是響應式的
+}</div>
+            
+            <div class="warning">
+                <strong>⚠️ 重要提醒：</strong>解構 reactive 對象會失去響應式！使用 toRefs() 來安全解構。
+            </div>
+        </div>
+        
+        <!-- 範例 5：toRefs 的使用 -->
+        <div class="example">
+            <h3>範例 5：toRefs 讓解構保持響應式</h3>
+            <div id="app5"></div>
+            <div class="code">
+import { reactive, toRefs } from 'vue'
+
+setup() {
+  const state = reactive({
+    firstName: '王',
+    lastName: '小華',
+    age: 28
+  })
+  
+  // 使用 toRefs 安全解構
+  const { firstName, lastName, age } = toRefs(state)
+  
+  // 現在這些都保持響應式
+  function updateName() {
+    firstName.value = '李'  // 注意：toRefs 後需要 .value
+    lastName.value = '小美'
+  }
+  
+  return {
+    firstName,
+    lastName, 
+    age,
+    updateName
+  }
+}</div>
+        </div>
+        
+        <!-- 範例 6：isRef 和 unref 工具 -->
+        <div class="example">
+            <h3>範例 6：響應式工具函數</h3>
+            <div id="app6"></div>
+            <div class="code">
+import { ref, isRef, unref } from 'vue'
+
+setup() {
+  const count = ref(0)
+  const regularVar = 42
+  
+  function checkTypes() {
+    console.log('count 是 ref？', isRef(count))        // true
+    console.log('regularVar 是 ref？', isRef(regularVar)) // false
+    
+    // unref: 如果是 ref 則返回 .value，否則返回原值
+    console.log('count 的值：', unref(count))      // 0
+    console.log('regularVar 的值：', unref(regularVar)) // 42
+  }
+  
+  return { count, checkTypes }
+}</div>
+            
+            <div class="info-box">
+                <strong>🛠️ 工具函數們：</strong><br>
+                • <code>isRef()</code>：檢查是否為 ref<br>
+                • <code>unref()</code>：安全獲取值（ref 或普通值）<br>
+                • <code>toRefs()</code>：將 reactive 對象轉為 ref 對象
+            </div>
+        </div>
+        
+        <h2>📖 重點總結</h2>
+        <ul>
+            <li><strong>ref()</strong>：基本數據類型的響應式包裝</li>
+            <li><strong>reactive()</strong>：對象和數組的響應式代理</li>
+            <li><strong>.value</strong>：訪問 ref 值的方式</li>
+            <li><strong>toRefs()</strong>：安全解構 reactive 對象</li>
+            <li><strong>深度響應式</strong>：嵌套對象自動響應式</li>
+        </ul>
+        
+        <h2>🎯 下一步</h2>
+        <p>現在你已經掌握了響應式系統！接下來學習：</p>
+        <ul>
+            <li><a href="01-basic-composition-api.html">← 上一課：基礎 Composition API</a></li>
+            <li><a href="03-computed-watch.html">下一課：計算屬性與監聽器 →</a></li>
+        </ul>
+    </div>
+
+    <script>
+        const { createApp, ref, reactive, toRefs, isRef, unref } = Vue
+        
+        // 範例 1：ref vs reactive
+        createApp({
+            template: `
+                <div>
+                    <h4>ref() 範例：</h4>
+                    <p>計數 (ref): {{ refCount }}</p>
+                    <button @click="refCount++">增加 ref 計數</button>
+                    
+                    <h4>reactive() 範例：</h4>
+                    <p>計數 (reactive): {{ reactiveState.count }}</p>
+                    <p>用戶: {{ reactiveState.user.name }} ({{ reactiveState.user.age }}歲)</p>
+                    <button @click="reactiveState.count++">增加 reactive 計數</button>
+                    <button @click="reactiveState.user.age++">增加年齡</button>
+                </div>
+            `,
+            setup() {
+                // ref 範例
+                const refCount = ref(0)
+                
+                // reactive 範例
+                const reactiveState = reactive({
+                    count: 0,
+                    user: {
+                        name: '小明',
+                        age: 25
+                    }
+                })
+                
+                return {
+                    refCount,
+                    reactiveState
+                }
+            }
+        }).mount('#app1')
+        
+        // 範例 2：響應式更新
+        createApp({
+            template: `
+                <div>
+                    <h4>響應式計數器：{{ count }}</h4>
+                    <button @click="updateCount">點我增加</button>
+                    
+                    <h4>{{ state.name }} 特性：</h4>
+                    <ul>
+                        <li v-for="feature in state.features" :key="feature">{{ feature }}</li>
+                    </ul>
+                    <button @click="addFeature">添加特性</button>
+                </div>
+            `,
+            setup() {
+                const count = ref(0)
+                const state = reactive({
+                    name: 'Vue 3',
+                    features: ['Composition API', 'TypeScript', 'Performance']
+                })
+                
+                function updateCount() {
+                    count.value++
+                    console.log('計數更新為：', count.value)
+                }
+                
+                function addFeature() {
+                    const features = ['Tree-shaking', 'Fragments', 'Portals', 'Suspense']
+                    const randomFeature = features[Math.floor(Math.random() * features.length)]
+                    if (!state.features.includes(randomFeature)) {
+                        state.features.push(randomFeature)
+                    }
+                }
+                
+                return {
+                    count,
+                    state,
+                    updateCount,
+                    addFeature
+                }
+            }
+        }).mount('#app2')
+        
+        // 範例 3：嵌套對象
+        createApp({
+            template: `
+                <div>
+                    <h4>用戶資訊：</h4>
+                    <p>姓名：{{ user.info.name }}</p>
+                    <p>年齡：{{ user.info.age }}</p>
+                    <p>地址：{{ user.info.address.city }}, {{ user.info.address.street }}</p>
+                    <p>愛好：{{ user.hobbies.join(', ') }}</p>
+                    
+                    <button @click="updateCity">搬到高雄</button>
+                    <button @click="addHobby">添加愛好</button>
+                    <button @click="haveBirthday">過生日</button>
+                </div>
+            `,
+            setup() {
+                const user = reactive({
+                    info: {
+                        name: '張三',
+                        age: 30,
+                        address: {
+                            city: '台北',
+                            street: '信義路'
+                        }
+                    },
+                    hobbies: ['讀書', '游泳']
+                })
+                
+                function updateCity() {
+                    user.info.address.city = user.info.address.city === '台北' ? '高雄' : '台北'
+                }
+                
+                function addHobby() {
+                    const hobbies = ['騎車', '登山', '攝影', '烹飪', '繪畫']
+                    const newHobby = hobbies[Math.floor(Math.random() * hobbies.length)]
+                    if (!user.hobbies.includes(newHobby)) {
+                        user.hobbies.push(newHobby)
+                    }
+                }
+                
+                function haveBirthday() {
+                    user.info.age++
+                }
+                
+                return {
+                    user,
+                    updateCity,
+                    addHobby,
+                    haveBirthday
+                }
+            }
+        }).mount('#app3')
+        
+        // 範例 4：響應式陷阱
+        createApp({
+            template: `
+                <div>
+                    <h4>正確的響應式更新：</h4>
+                    <p>計數：{{ state.count }}</p>
+                    <button @click="increment">正確增加</button>
+                    <button @click="wrongIncrement">錯誤增加（無效）</button>
+                    <p><small>打開瀏覽器控制台查看錯誤示例的log</small></p>
+                </div>
+            `,
+            setup() {
+                const state = reactive({ count: 0 })
+                
+                // 錯誤的解構方式
+                let { count } = state  // 失去響應式
+                
+                function increment() {
+                    state.count++  // ✅ 正確
+                }
+                
+                function wrongIncrement() {
+                    count++  // ❌ 不會觸發更新
+                    console.log('局部變數 count：', count)
+                    console.log('響應式 state.count：', state.count)
+                }
+                
+                return {
+                    state,
+                    increment,
+                    wrongIncrement
+                }
+            }
+        }).mount('#app4')
+        
+        // 範例 5：toRefs 使用
+        createApp({
+            template: `
+                <div>
+                    <h4>使用 toRefs 安全解構：</h4>
+                    <p>姓名：{{ firstName }} {{ lastName }}</p>
+                    <p>年齡：{{ age }}</p>
+                    <button @click="updateName">更換姓名</button>
+                    <button @click="age++">年齡+1</button>
+                </div>
+            `,
+            setup() {
+                const state = reactive({
+                    firstName: '王',
+                    lastName: '小華',
+                    age: 28
+                })
+                
+                // 使用 toRefs 安全解構
+                const { firstName, lastName, age } = toRefs(state)
+                
+                function updateName() {
+                    const names = [
+                        ['李', '小美'], 
+                        ['陳', '大明'], 
+                        ['林', '小花'],
+                        ['王', '小華']  // 原始名字
+                    ]
+                    const randomName = names[Math.floor(Math.random() * names.length)]
+                    firstName.value = randomName[0]
+                    lastName.value = randomName[1]
+                }
+                
+                return {
+                    firstName,
+                    lastName,
+                    age,
+                    updateName
+                }
+            }
+        }).mount('#app5')
+        
+        // 範例 6：工具函數
+        createApp({
+            template: `
+                <div>
+                    <h4>響應式工具函數測試：</h4>
+                    <p>ref 計數：{{ count }}</p>
+                    <p>普通變數：{{ regularVar }}</p>
+                    <button @click="checkTypes">檢查類型並記錄</button>
+                    <button @click="count++">增加計數</button>
+                    <p><small>打開瀏覽器控制台查看 log</small></p>
+                </div>
+            `,
+            setup() {
+                const count = ref(0)
+                const regularVar = 42
+                
+                function checkTypes() {
+                    console.log('=== 類型檢查 ===')
+                    console.log('count 是 ref？', isRef(count))
+                    console.log('regularVar 是 ref？', isRef(regularVar))
+                    console.log('count 的值（unref）：', unref(count))
+                    console.log('regularVar 的值（unref）：', unref(regularVar))
+                    console.log('count.value：', count.value)
+                }
+                
+                return {
+                    count,
+                    regularVar,
+                    checkTypes
+                }
+            }
+        }).mount('#app6')
+    </script>
+</body>
+</html>

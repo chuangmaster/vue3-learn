@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>04 - 生命週期鉤子</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .example {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #e67e22;
+            border-radius: 5px;
+            background: #fef9e7;
+        }
+        .code {
+            background: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+        }
+        button {
+            background: #e67e22;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #d68910;
+        }
+        .lifecycle-log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 5px;
+        }
+        .log-mount { color: #28a745; }
+        .log-update { color: #007bff; }
+        .log-unmount { color: #dc3545; }
+        .log-effect { color: #6f42c1; }
+        .highlight {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .info-box {
+            background: #e8f4fd;
+            border: 1px solid #b3d7ff;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .comparison-table th,
+        .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .comparison-table th {
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 第四課：生命週期鉤子</h1>
+        
+        <h2>🎯 什麼是生命週期？</h2>
+        <p>生命週期鉤子讓你在組件的不同階段執行代碼，比如組件創建、掛載、更新、銷毀等時機。</p>
+        
+        <!-- 生命週期對比表 -->
+        <div class="info-box">
+            <h3>📊 Options API vs Composition API 對比</h3>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Options API</th>
+                        <th>Composition API</th>
+                        <th>執行時機</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>beforeCreate</td>
+                        <td>-</td>
+                        <td>setup() 本身就相當於 beforeCreate</td>
+                    </tr>
+                    <tr>
+                        <td>created</td>
+                        <td>-</td>
+                        <td>setup() 本身就相當於 created</td>
+                    </tr>
+                    <tr>
+                        <td>beforeMount</td>
+                        <td>onBeforeMount</td>
+                        <td>DOM 掛載前</td>
+                    </tr>
+                    <tr>
+                        <td>mounted</td>
+                        <td>onMounted</td>
+                        <td>DOM 掛載後</td>
+                    </tr>
+                    <tr>
+                        <td>beforeUpdate</td>
+                        <td>onBeforeUpdate</td>
+                        <td>響應式數據變化，DOM 更新前</td>
+                    </tr>
+                    <tr>
+                        <td>updated</td>
+                        <td>onUpdated</td>
+                        <td>DOM 更新後</td>
+                    </tr>
+                    <tr>
+                        <td>beforeUnmount</td>
+                        <td>onBeforeUnmount</td>
+                        <td>組件卸載前</td>
+                    </tr>
+                    <tr>
+                        <td>unmounted</td>
+                        <td>onUnmounted</td>
+                        <td>組件卸載後</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 範例 1：基本生命週期 -->
+        <div class="example">
+            <h3>範例 1：基本生命週期鉤子</h3>
+            <div id="app1"></div>
+            <div class="code">
+import { 
+  ref, 
+  onBeforeMount, 
+  onMounted, 
+  onBeforeUpdate, 
+  onUpdated,
+  onBeforeUnmount,
+  onUnmounted
+} from 'vue'
+
+setup() {
+  const count = ref(0)
+  
+  onBeforeMount(() => {
+    console.log('📝 onBeforeMount: 準備掛載到 DOM')
+  })
+  
+  onMounted(() => {
+    console.log('✅ onMounted: 已掛載到 DOM，可以訪問 DOM 元素')
+  })
+  
+  onBeforeUpdate(() => {
+    console.log('🔄 onBeforeUpdate: 數據更新，DOM 重新渲染前')
+  })
+  
+  onUpdated(() => {
+    console.log('✨ onUpdated: DOM 已更新')
+  })
+  
+  return { count }
+}</div>
+        </div>
+        
+        <!-- 範例 2：實際應用場景 -->
+        <div class="example">
+            <h3>範例 2：常見應用場景</h3>
+            <div id="app2"></div>
+            <div class="code">
+setup() {
+  const windowSize = ref({ width: 0, height: 0 })
+  
+  // 更新視窗大小
+  function updateWindowSize() {
+    windowSize.value = {
+      width: window.innerWidth,
+      height: window.innerHeight
+    }
+  }
+  
+  onMounted(() => {
+    // 組件掛載後：添加事件監聽、初始化第三方庫
+    updateWindowSize()
+    window.addEventListener('resize', updateWindowSize)
+    console.log('✅ 事件監聽器已添加')
+  })
+  
+  onUnmounted(() => {
+    // 組件卸載前：清理事件監聽、清除定時器
+    window.removeEventListener('resize', updateWindowSize)
+    console.log('🧹 事件監聽器已清理')
+  })
+  
+  return { windowSize }
+}</div>
+        </div>
+        
+        <!-- 範例 3：定時器管理 -->
+        <div class="example">
+            <h3>範例 3：定時器的正確管理</h3>
+            <div id="app3"></div>
+            <div class="code">
+setup() {
+  const time = ref(new Date())
+  const isRunning = ref(true)
+  let timer = null
+  
+  onMounted(() => {
+    // 啟動定時器
+    timer = setInterval(() => {
+      if (isRunning.value) {
+        time.value = new Date()
+      }
+    }, 1000)
+    console.log('⏰ 定時器已啟動')
+  })
+  
+  onUnmounted(() => {
+    // 清理定時器 - 非常重要！
+    if (timer) {
+      clearInterval(timer)
+      console.log('⏹️ 定時器已清理')
+    }
+  })
+  
+  return { time, isRunning }
+}</div>
+            
+            <div class="highlight">
+                <strong>💡 重要：</strong>在 onUnmounted 中清理定時器、事件監聽器等，避免內存洩漏！
+            </div>
+        </div>
+        
+        <!-- 範例 4：API 數據加載 -->
+        <div class="example">
+            <h3>範例 4：API 數據加載最佳實踐</h3>
+            <div id="app4"></div>
+            <div class="code">
+setup() {
+  const users = ref([])
+  const loading = ref(false)
+  const error = ref(null)
+  
+  async function fetchUsers() {
+    loading.value = true
+    error.value = null
+    
+    try {
+      // 模擬 API 調用
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      
+      // 模擬數據
+      users.value = [
+        { id: 1, name: '張小明', email: 'zhang@example.com' },
+        { id: 2, name: '李小華', email: 'li@example.com' },
+        { id: 3, name: '王小美', email: 'wang@example.com' }
+      ]
+    } catch (err) {
+      error.value = '載入失敗'
+    } finally {
+      loading.value = false
+    }
+  }
+  
+  // 組件掛載後自動載入數據
+  onMounted(() => {
+    fetchUsers()
+    console.log('📊 開始載入用戶數據')
+  })
+  
+  return { users, loading, error, fetchUsers }
+}</div>
+        </div>
+        
+        <!-- 範例 5：組件的掛載和卸載 -->
+        <div class="example">
+            <h3>範例 5：動態組件的生命週期</h3>
+            <div id="app5"></div>
+            <div class="code">
+// 子組件的生命週期
+const ChildComponent = {
+  setup() {
+    const count = ref(0)
+    const logs = inject('logs')
+    
+    onBeforeMount(() => {
+      logs.value.push('🔵 子組件：準備掛載')
+    })
+    
+    onMounted(() => {
+      logs.value.push('✅ 子組件：已掛載')
+    })
+    
+    onBeforeUnmount(() => {
+      logs.value.push('🔶 子組件：準備卸載')
+    })
+    
+    onUnmounted(() => {
+      logs.value.push('❌ 子組件：已卸載')
+    })
+    
+    return { count }
+  }
+}</div>
+        </div>
+        
+        <!-- 範例 6：生命週期的組合使用 -->
+        <div class="example">
+            <h3>範例 6：複雜場景的生命週期組合</h3>
+            <div id="app6"></div>
+            <div class="code">
+setup() {
+  const data = ref([])
+  const socket = ref(null)
+  const isOnline = ref(navigator.onLine)
+  
+  // 網路狀態監控
+  function handleOnline() { isOnline.value = true }
+  function handleOffline() { isOnline.value = false }
+  
+  onMounted(async () => {
+    // 1. 添加網路監聽
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    
+    // 2. 初始化 WebSocket（模擬）
+    console.log('🔌 WebSocket 連接已建立')
+    
+    // 3. 載入初始數據
+    await loadData()
+  })
+  
+  onUpdated(() => {
+    // DOM 更新後的處理
+    console.log('📱 UI 已更新，數據項目數:', data.value.length)
+  })
+  
+  onUnmounted(() => {
+    // 清理所有資源
+    window.removeEventListener('online', handleOnline)
+    window.removeEventListener('offline', handleOffline)
+    
+    if (socket.value) {
+      socket.value.close()
+      console.log('🔌 WebSocket 連接已關閉')
+    }
+  })
+  
+  return { data, isOnline }
+}</code>
+        </div>
+        
+        <h2>📖 重點總結</h2>
+        <ul>
+            <li><strong>onMounted</strong>：DOM 掛載後，適合初始化第三方庫、API 調用</li>
+            <li><strong>onUnmounted</strong>：組件銷毀前，必須清理資源</li>
+            <li><strong>onUpdated</strong>：DOM 更新後，注意避免無限循環</li>
+            <li><strong>清理工作</strong>：定時器、事件監聽、WebSocket 等必須清理</li>
+        </ul>
+        
+        <div class="highlight">
+            <strong>⚠️ 常見陷阱：</strong><br>
+            • 忘記清理定時器和事件監聽器<br>
+            • 在 onUpdated 中修改響應式數據造成無限循環<br>
+            • 異步操作沒有考慮組件已卸載的情況
+        </div>
+        
+        <h2>🎯 下一步</h2>
+        <ul>
+            <li><a href="03-computed-watch.html">← 上一課：計算屬性與監聽器</a></li>
+            <li><a href="05-composables.html">下一課：Composables 深入 →</a></li>        
+        </ul>
+    </div>
+
+    <script>
+        const { 
+            createApp, 
+            ref, 
+            reactive,
+            onBeforeMount, 
+            onMounted, 
+            onBeforeUpdate, 
+            onUpdated,
+            onBeforeUnmount,
+            onUnmounted,
+            provide,
+            inject
+        } = Vue
+        
+        // 範例 1：基本生命週期
+        createApp({
+            template: `
+                <div>
+                    <h4>生命週期演示</h4>
+                    <p>計數：{{ count }}</p>
+                    <button @click="count++">增加計數 (觸發更新)</button>
+                    <div class="lifecycle-log">
+                        <div v-for="log in logs" :key="log" class="log-entry" :class="getLogClass(log)">
+                            {{ log }}
+                        </div>
+                    </div>
+                    <p><small>打開控制台查看詳細生命週期 log</small></p>
+                </div>
+            `,
+            setup() {
+                const count = ref(0)
+                const logs = ref([])
+                
+                function addLog(message, type = '') {
+                    const timestamp = new Date().toLocaleTimeString()
+                    logs.value.unshift(`[${timestamp}] ${message}`)
+                    if (logs.value.length > 10) {
+                        logs.value = logs.value.slice(0, 10)
+                    }
+                }
+                
+                function getLogClass(log) {
+                    if (log.includes('Mount')) return 'log-mount'
+                    if (log.includes('Update')) return 'log-update'
+                    if (log.includes('Unmount')) return 'log-unmount'
+                    return ''
+                }
+                
+                onBeforeMount(() => {
+                    console.log('📝 onBeforeMount: 準備掛載到 DOM')
+                    addLog('📝 onBeforeMount: 準備掛載')
+                })
+                
+                onMounted(() => {
+                    console.log('✅ onMounted: 已掛載到 DOM')
+                    addLog('✅ onMounted: 組件已掛載')
+                })
+                
+                onBeforeUpdate(() => {
+                    console.log('🔄 onBeforeUpdate: DOM 更新前')
+                    addLog('🔄 onBeforeUpdate: 準備更新 DOM')
+                })
+                
+                onUpdated(() => {
+                    console.log('✨ onUpdated: DOM 已更新')
+                    addLog('✨ onUpdated: DOM 更新完成')
+                })
+                
+                return { count, logs, getLogClass }
+            }
+        }).mount('#app1')
+        
+        // 範例 2：視窗大小監聽
+        createApp({
+            template: `
+                <div>
+                    <h4>視窗大小監聽</h4>
+                    <p>視窗大小：{{ windowSize.width }} × {{ windowSize.height }}</p>
+                    <p><small>調整瀏覽器視窗大小試試</small></p>
+                    <div class="lifecycle-log">
+                        <div v-for="log in logs" :key="log" class="log-entry">{{ log }}</div>
+                    </div>
+                </div>
+            `,
+            setup() {
+                const windowSize = ref({ width: 0, height: 0 })
+                const logs = ref([])
+                
+                function addLog(message) {
+                    const timestamp = new Date().toLocaleTimeString()
+                    logs.value.unshift(`[${timestamp}] ${message}`)
+                    if (logs.value.length > 8) {
+                        logs.value = logs.value.slice(0, 8)
+                    }
+                }
+                
+                function updateWindowSize() {
+                    windowSize.value = {
+                        width: window.innerWidth,
+                        height: window.innerHeight
+                    }
+                    addLog(`視窗大小: ${windowSize.value.width}×${windowSize.value.height}`)
+                }
+                
+                onMounted(() => {
+                    updateWindowSize()
+                    window.addEventListener('resize', updateWindowSize)
+                    addLog('✅ 視窗監聽器已添加')
+                    console.log('✅ 事件監聽器已添加')
+                })
+                
+                onUnmounted(() => {
+                    window.removeEventListener('resize', updateWindowSize)
+                    addLog('🧹 視窗監聽器已清理')
+                    console.log('🧹 事件監聽器已清理')
+                })
+                
+                return { windowSize, logs }
+            }
+        }).mount('#app2')
+        
+        // 範例 3：定時器管理
+        createApp({
+            template: `
+                <div>
+                    <h4>實時時鐘</h4>
+                    <p style="font-size: 1.2em; font-family: monospace;">{{ formatTime(time) }}</p>
+                    <p>
+                        <button @click="isRunning = !isRunning">
+                            {{ isRunning ? '⏸️ 暫停' : '▶️ 繼續' }}
+                        </button>
+                    </p>
+                    <p>狀態：{{ isRunning ? '🟢 運行中' : '🔴 已暫停' }}</p>
+                </div>
+            `,
+            setup() {
+                const time = ref(new Date())
+                const isRunning = ref(true)
+                let timer = null
+                
+                function formatTime(date) {
+                    return date.toLocaleTimeString('zh-TW', {
+                        hour12: false,
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    })
+                }
+                
+                onMounted(() => {
+                    timer = setInterval(() => {
+                        if (isRunning.value) {
+                            time.value = new Date()
+                        }
+                    }, 1000)
+                    console.log('⏰ 時鐘定時器已啟動')
+                })
+                
+                onUnmounted(() => {
+                    if (timer) {
+                        clearInterval(timer)
+                        console.log('⏹️ 時鐘定時器已清理')
+                    }
+                })
+                
+                return { time, isRunning, formatTime }
+            }
+        }).mount('#app3')
+        
+        // 範例 4：API 數據加載
+        createApp({
+            template: `
+                <div>
+                    <h4>用戶數據加載</h4>
+                    <button @click="fetchUsers" :disabled="loading">
+                        {{ loading ? '⏳ 載入中...' : '🔄 重新載入' }}
+                    </button>
+                    
+                    <div v-if="error" style="color: red; margin: 10px 0;">
+                        ❌ {{ error }}
+                    </div>
+                    
+                    <div v-if="loading" style="margin: 10px 0;">
+                        <span>📡 正在載入用戶數據...</span>
+                    </div>
+                    
+                    <div v-if="!loading && users.length > 0">
+                        <h5>📋 用戶列表：</h5>
+                        <ul>
+                            <li v-for="user in users" :key="user.id">
+                                {{ user.name }} ({{ user.email }})
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            `,
+            setup() {
+                const users = ref([])
+                const loading = ref(false)
+                const error = ref(null)
+                
+                async function fetchUsers() {
+                    loading.value = true
+                    error.value = null
+                    
+                    try {
+                        console.log('📊 開始載入用戶數據')
+                        
+                        // 模擬 API 延遲
+                        await new Promise(resolve => setTimeout(resolve, 1500))
+                        
+                        // 隨機決定是否成功
+                        if (Math.random() > 0.8) {
+                            throw new Error('網路錯誤')
+                        }
+                        
+                        // 模擬數據
+                        users.value = [
+                            { id: 1, name: '張小明', email: 'zhang@example.com' },
+                            { id: 2, name: '李小華', email: 'li@example.com' },
+                            { id: 3, name: '王小美', email: 'wang@example.com' },
+                            { id: 4, name: '陳大雄', email: 'chen@example.com' }
+                        ]
+                        
+                        console.log('✅ 用戶數據載入完成', users.value)
+                    } catch (err) {
+                        error.value = '載入失敗，請稍後再試'
+                        console.error('❌ 載入用戶數據失敗:', err)
+                    } finally {
+                        loading.value = false
+                    }
+                }
+                
+                onMounted(() => {
+                    fetchUsers()
+                })
+                
+                return { users, loading, error, fetchUsers }
+            }
+        }).mount('#app4')
+        
+        // 範例 5：動態組件
+        createApp({
+            template: `
+                <div>
+                    <h4>動態組件生命週期</h4>
+                    <button @click="showChild = !showChild">
+                        {{ showChild ? '❌ 移除子組件' : '✅ 顯示子組件' }}
+                    </button>
+                    
+                    <div v-if="showChild" style="border: 1px solid #ddd; padding: 10px; margin: 10px 0;">
+                        <child-component></child-component>
+                    </div>
+                    
+                    <div class="lifecycle-log">
+                        <h5>生命週期日誌：</h5>
+                        <div v-for="log in logs.slice().reverse()" :key="log" class="log-entry">
+                            {{ log }}
+                        </div>
+                    </div>
+                </div>
+            `,
+            setup() {
+                const showChild = ref(false)
+                const logs = ref([])
+                
+                provide('logs', logs)
+                
+                return { showChild, logs }
+            },
+            components: {
+                'child-component': {
+                    template: `
+                        <div>
+                            <h5>🧩 子組件</h5>
+                            <p>計數：{{ count }}</p>
+                            <button @click="count++">+1</button>
+                        </div>
+                    `,
+                    setup() {
+                        const count = ref(0)
+                        const logs = inject('logs')
+                        
+                        function addLog(message) {
+                            const timestamp = new Date().toLocaleTimeString()
+                            logs.value.push(`[${timestamp}] ${message}`)
+                        }
+                        
+                        onBeforeMount(() => {
+                            addLog('🔵 子組件：準備掛載')
+                        })
+                        
+                        onMounted(() => {
+                            addLog('✅ 子組件：已掛載')
+                        })
+                        
+                        onBeforeUpdate(() => {
+                            addLog('🔄 子組件：準備更新')
+                        })
+                        
+                        onUpdated(() => {
+                            addLog('✨ 子組件：更新完成')
+                        })
+                        
+                        onBeforeUnmount(() => {
+                            addLog('🔶 子組件：準備卸載')
+                        })
+                        
+                        onUnmounted(() => {
+                            addLog('❌ 子組件：已卸載')
+                        })
+                        
+                        return { count }
+                    }
+                }
+            }
+        }).mount('#app5')
+        
+        // 範例 6：複雜生命週期組合
+        createApp({
+            template: `
+                <div>
+                    <h4>複雜場景模擬</h4>
+                    <p>網路狀態：{{ isOnline ? '🟢 在線' : '🔴 離線' }}</p>
+                    <p>數據項目：{{ data.length }} 個</p>
+                    <button @click="addData">📝 添加數據</button>
+                    <button @click="clearData">🗑️ 清空數據</button>
+                    
+                    <div style="margin-top: 10px;">
+                        <h5>📊 數據列表：</h5>
+                        <ul v-if="data.length > 0">
+                            <li v-for="item in data" :key="item.id">
+                                {{ item.name }} - {{ item.timestamp }}
+                            </li>
+                        </ul>
+                        <p v-else style="color: #999;">暫無數據</p>
+                    </div>
+                </div>
+            `,
+            setup() {
+                const data = ref([])
+                const isOnline = ref(navigator.onLine)
+                let idCounter = 1
+                
+                function handleOnline() {
+                    isOnline.value = true
+                    console.log('🌐 網路已連接')
+                }
+                
+                function handleOffline() {
+                    isOnline.value = false
+                    console.log('🌐 網路已斷開')
+                }
+                
+                function addData() {
+                    data.value.push({
+                        id: idCounter++,
+                        name: `數據項目 ${idCounter - 1}`,
+                        timestamp: new Date().toLocaleTimeString()
+                    })
+                }
+                
+                function clearData() {
+                    data.value = []
+                }
+                
+                onMounted(() => {
+                    // 網路狀態監聽
+                    window.addEventListener('online', handleOnline)
+                    window.addEventListener('offline', handleOffline)
+                    console.log('🔌 已初始化所有監聽器')
+                    
+                    // 初始化一些數據
+                    addData()
+                    addData()
+                })
+                
+                onUpdated(() => {
+                    console.log('📱 UI 已更新，數據項目數:', data.value.length)
+                })
+                
+                onUnmounted(() => {
+                    window.removeEventListener('online', handleOnline)
+                    window.removeEventListener('offline', handleOffline)
+                    console.log('🧹 所有監聽器已清理')
+                })
+                
+                return { 
+                    data, 
+                    isOnline, 
+                    addData, 
+                    clearData 
+                }
+            }
+        }).mount('#app6')
+    </script>
+</body>
+</html>

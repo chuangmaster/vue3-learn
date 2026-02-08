@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>01 - 基礎 Composition API</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .example {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #e74c3c;
+            border-radius: 5px;
+            background: #fff5f5;
+        }
+        .code {
+            background: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .highlight {
+            background: #ffffcc;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 第一課：基礎 Composition API</h1>
+        
+        <h2>👋 歡迎來到 Vue 3 的世界！</h2>
+        <p>在這一課中，我們將學習 Composition API 的基本概念。</p>
+        
+        <!-- 範例 1：Hello World -->
+        <div class="example">
+            <h3>範例 1：Hello World with Composition API</h3>
+            <div id="app1"></div>
+            <div class="code">
+// 使用 Composition API 的 Hello World
+const { createApp, ref } = Vue
+
+createApp({
+  setup() {
+    // 💡 ref() 創建響應式數據
+    const message = ref('Hello Vue 3!')
+    
+    // 💡 setup() 必須返回要在模板中使用的數據和方法
+    return {
+      message
+    }
+  }
+}).mount('#app1')</div>
+        </div>
+        
+        <!-- 範例 2：計數器 -->
+        <div class="example">
+            <h3>範例 2：互動計數器</h3>
+            <div id="app2"></div>
+            <div class="code">
+// 基本計數器功能
+setup() {
+  const count = ref(0)
+  
+  // 定義方法
+  function increment() {
+    count.value++  // 注意：修改 ref 需要使用 .value
+  }
+  
+  function decrement() {
+    count.value--
+  }
+  
+  return {
+    count,
+    increment,
+    decrement
+  }
+}</div>
+            <p class="highlight">重要：在 JavaScript 中訪問 ref 需要使用 <code>.value</code>，但在模板中 Vue 會自動解包。</p>
+        </div>
+        
+        <!-- 範例 3：Options API 對比 -->
+        <div class="example">
+            <h3>範例 3：與 Options API 對比</h3>
+            <div id="app3"></div>
+            <div class="code">
+// Options API (Vue 2 風格)
+{
+  data() {
+    return {
+      name: '',
+      count: 0
+    }
+  },
+  methods: {
+    updateName(newName) {
+      this.name = newName
+    }
+  }
+}
+
+// 相同功能的 Composition API
+setup() {
+  const name = ref('')
+  const count = ref(0)
+  
+  function updateName(newName) {
+    name.value = newName
+  }
+  
+  return { name, count, updateName }
+}</div>
+        </div>
+        
+        <!-- 範例 4：多個 ref 的使用 -->
+        <div class="example">
+            <h3>範例 4：管理多個響應式數據</h3>
+            <div id="app4"></div>
+            <div class="code">
+setup() {
+  const firstName = ref('張')
+  const lastName = ref('小明')
+  const age = ref(25)
+  const isAdult = ref(true)
+  
+  function increaseAge() {
+    age.value++
+    isAdult.value = age.value >= 18
+  }
+  
+  return {
+    firstName,
+    lastName,
+    age,
+    isAdult,
+    increaseAge
+  }
+}</div>
+        </div>
+        
+        <h2>📖 重點總結</h2>
+        <ul>
+            <li><strong>setup() 函數</strong>：Composition API 的入口點</li>
+            <li><strong>ref()</strong>：創建響應式的基本數據類型</li>
+            <li><strong>.value</strong>：在 JavaScript 中訪問 ref 的值</li>
+            <li><strong>返回對象</strong>：setup() 必須返回模板需要的數據和方法</li>
+        </ul>
+        
+        <h2>🎯 下一步</h2>
+        <p>現在你已經理解了 Composition API 的基礎！接下來請學習：</p>
+        <ul>
+            <li><a href="../02-reactive-refs/index.html">02 - 響應式系統深入</a></li>
+        </ul>
+    </div>
+
+    <script>
+        const { createApp, ref } = Vue
+        
+        // 範例 1：Hello World
+        createApp({
+            template: `
+                <div>
+                    <h4>{{ message }}</h4>
+                    <input v-model="message" placeholder="試試修改這個文字">
+                </div>
+            `,
+            setup() {
+                const message = ref('Hello Vue 3!')
+                return {
+                    message
+                }
+            }
+        }).mount('#app1')
+        
+        // 範例 2：計數器
+        createApp({
+            template: `
+                <div>
+                    <h4>計數: {{ count }}</h4>
+                    <button @click="increment">+1</button>
+                    <button @click="decrement">-1</button>
+                    <button @click="reset">重置</button>
+                </div>
+            `,
+            setup() {
+                const count = ref(0)
+                
+                function increment() {
+                    count.value++
+                }
+                
+                function decrement() {
+                    count.value--
+                }
+                
+                function reset() {
+                    count.value = 0
+                }
+                
+                return {
+                    count,
+                    increment,
+                    decrement,
+                    reset
+                }
+            }
+        }).mount('#app2')
+        
+        // 範例 3：表單輸入
+        createApp({
+            template: `
+                <div>
+                    <h4>輸入你的名字：</h4>
+                    <input v-model="name" placeholder="請輸入名字">
+                    <p>你好，{{ name || '訪客' }}！</p>
+                    <p>你輸入了 {{ name.length }} 個字符</p>
+                </div>
+            `,
+            setup() {
+                const name = ref('')
+                
+                return {
+                    name
+                }
+            }
+        }).mount('#app3')
+        
+        // 範例 4：多個數據
+        createApp({
+            template: `
+                <div>
+                    <h4>個人資訊：</h4>
+                    <p>姓名：{{ firstName }} {{ lastName }}</p>
+                    <p>年齡：{{ age }} 歲 {{ isAdult ? '(成年)' : '(未成年)' }}</p>
+                    <button @click="increaseAge">過生日 🎂</button>
+                    <div style="margin-top: 10px;">
+                        <input v-model="firstName" placeholder="姓氏">
+                        <input v-model="lastName" placeholder="名字">
+                    </div>
+                </div>
+            `,
+            setup() {
+                const firstName = ref('張')
+                const lastName = ref('小明')
+                const age = ref(25)
+                const isAdult = ref(true)
+                
+                function increaseAge() {
+                    age.value++
+                    isAdult.value = age.value >= 18
+                }
+                
+                return {
+                    firstName,
+                    lastName,
+                    age,
+                    isAdult,
+                    increaseAge
+                }
+            }
+        }).mount('#app4')
+    </script>
+</body>
+</html>

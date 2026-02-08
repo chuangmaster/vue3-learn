@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>06 - Vue 3 進階特性</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .example {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #8e44ad;
+            border-radius: 5px;
+            background: #faf5ff;
+        }
+        .code {
+            background: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            font-size: 0.9em;
+        }
+        button {
+            background: #8e44ad;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #7d3c98;
+        }
+        input, select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px;
+        }
+        .highlight {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .tip-box {
+            background: #e8f4fd;
+            border: 1px solid #b3d7ff;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .feature-demo {
+            border: 2px dashed #8e44ad;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            background: #fcf3ff;
+        }
+        .theme-light {
+            background: #fff;
+            color: #333;
+        }
+        .theme-dark {
+            background: #2c3e50;
+            color: #ecf0f1;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 400px;
+            width: 90%;
+        }
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            font-size: 1.2em;
+            color: #666;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #8e44ad;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .nested-component {
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #f8f9fa;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 第六課：Vue 3 進階特性</h1>
+        
+        <h2>🎯 學習目標</h2>
+        <p>這一課我們將學習 Vue 3 的高級特性，包括依賴注入、Fragment、Teleport、Suspense 等。</p>
+
+        <!-- 範例 1: Provide / Inject -->
+        <div class="example">
+            <h3>範例 1：Provide / Inject - 跨層級數據傳遞</h3>
+            <div class="feature-demo">
+                <div id="app1"></div>
+            </div>
+            <div class="code">
+// 祖父組件
+setup() {
+  const theme = ref('light')
+  const user = reactive({
+    name: 'Vue 3 User',
+    role: 'Developer'
+  })
+  
+  // 提供數據給後代組件
+  provide('theme', theme)
+  provide('user', user)
+  
+  return { theme, user }
+}
+
+// 子孫組件（無論多深層級）
+setup() {
+  // 注入祖先提供的數據
+  const theme = inject('theme')
+  const user = inject('user')
+  
+  // 可以提供默認值
+  const config = inject('config', { language: 'zh-TW' })
+  
+  return { theme, user, config }
+}</div>
+            
+            <div class="tip-box">
+                <strong>💡 使用場景：</strong>主題管理、用戶信息、國際化配置等跨組件共享的數據。
+            </div>
+        </div>
+
+        <!-- 範例 2: Fragment - 多根節點 -->
+        <div class="example">
+            <h3>範例 2：Fragment - 多根節點組件</h3>
+            <div class="feature-demo">
+                <div id="app2"></div>
+            </div>
+            <div class="code">
+// Vue 3 支持多根節點組件
+const MultiRootComponent = {
+  template: `
+    <header>這是標題</header>
+    <main>這是主要內容</main>
+    <footer>這是底部</footer>
+  `
+}
+
+// Vue 2 中必須有一個根元素：
+// <div>
+//   <header>...</header>
+//   <main>...</main>
+//   <footer>...</footer>
+// </div></div>
+            
+            <div class="highlight">
+                <strong>✨ Fragment 優勢：</strong>減少不必要的包裹元素，讓 DOM 結構更語義化！
+            </div>
+        </div>
+
+        <!-- 範例 3: Teleport - 傳送門 -->
+        <div class="example">
+            <h3>範例 3：Teleport - 元素傳送</h3>
+            <div class="feature-demo">
+                <div id="app3"></div>
+            </div>
+            <div class="code">
+// 使用 Teleport 將內容渲染到其他位置
+template: `
+  <div>
+    <button @click="showModal = true">打開 Modal</button>
+    
+    <!-- 將 Modal 內容傳送到 body -->
+    <Teleport to="body">
+      <div v-if="showModal" class="modal-overlay" @click="showModal = false">
+        <div class="modal-content" @click.stop>
+          <h3>📢 這是一個 Modal</h3>
+          <p>這個 Modal 是通過 Teleport 渲染到 body 元素的</p>
+          <button @click="showModal = false">關閉</button>
+        </div>
+      </div>
+    </Teleport>
+  </div>
+`</div>
+            
+            <div style="margin-top: 20px;">
+                <!-- Teleport 目標位置會在這裡 -->
+                <div id="modal-container"></div>
+            </div>
+        </div>
+
+        <!-- 範例 4: Suspense - 異步組件 -->
+        <div class="example">
+            <h3>範例 4：Suspense - 異步組件加載</h3>
+            <div class="feature-demo">
+                <div id="app4"></div>
+            </div>
+            <div class="code">
+// 異步組件
+const AsyncComponent = Vue.defineAsyncComponent({
+  loader: () => {
+    return new Promise((resolve) => {
+      // 模擬異步加載
+      setTimeout(() => {
+        resolve({
+          template: `
+            <div>
+              <h4>🎉 異步組件加載完成！</h4>
+              <p>這個組件是異步加載的</p>
+            </div>
+          `
+        })
+      }, 2000)
+    })
+  },
+  loadingComponent: {
+    template: '<div class="loading">⏳ 組件載入中...</div>'
+  },
+  errorComponent: {
+    template: '<div class="error">❌ 組件載入失敗</div>'
+  },
+  timeout: 5000
+})
+
+// 使用 Suspense
+template: `
+  <Suspense>
+    <template #default>
+      <async-component />
+    </template>
+    <template #fallback>
+      <div class="loading">
+        <div class="spinner"></div>
+        載入中...
+      </div>
+    </template>
+  </Suspense>
+`</div>
+        </div>
+
+        <!-- 範例 5: Composition API 高級模式 -->
+        <div class="example">
+            <h3>範例 5：Composition API 高級模式</h3>
+            <div class="feature-demo">
+                <div id="app5"></div>
+            </div>
+            <div class="code">
+// 使用 setup() 的返回函數模式
+setup(props, { emit, slots, attrs }) {
+  const count = ref(0)
+  
+  // 返回渲染函數
+  return () => Vue.h('div', [
+    Vue.h('p', `計數: ${count.value}`),
+    Vue.h('button', {
+      onClick: () => count.value++
+    }, '+1')
+  ])
+}
+
+// 也可以返回 JSX（需要配置）
+setup() {
+  const count = ref(0)
+  
+  return () => (
+    <div>
+      <p>計數: {count.value}</p>
+      <button onClick={() => count.value++}>+1</button>
+    </div>
+  )
+}</div>
+        </div>
+
+        <!-- 範例 6: 全局 API 變更 -->
+        <div class="example">
+            <h3>範例 6：全局 API 的變更</h3>
+            <div class="feature-demo">
+                <div id="app6"></div>
+            </div>
+            <div class="code">
+// Vue 2 全局 API
+Vue.component('my-component', { ... })
+Vue.directive('my-directive', { ... })
+Vue.mixin({ ... })
+Vue.use(plugin)
+
+// Vue 3 應用實例 API  
+const app = createApp({})
+app.component('my-component', { ... })
+app.directive('my-directive', { ... })
+app.mixin({ ... })
+app.use(plugin)
+
+// 好處：不同應用實例之間相互隔離</div>
+            
+            <div class="highlight">
+                <strong>🔧 API 變化的好處：</strong><br>
+                • 應用實例隔離，避免全局污染<br>
+                • 更好的 tree-shaking 支持<br>
+                • TypeScript 類型支持更強
+            </div>
+        </div>
+
+        <!-- 範例 7: 響應式進階用法 -->
+        <div class="example">
+            <h3>範例 7：響應式 API 進階用法</h3>
+            <div class="feature-demo">
+                <div id="app7"></div>
+            </div>
+            <div class="code">
+import { 
+  ref, reactive, readonly, shallowRef, shallowReactive,
+  markRaw, toRaw, isRef, isReactive, isReadonly
+} from 'vue'
+
+setup() {
+  // readonly 只讀代理
+  const state = reactive({ count: 0 })
+  const readonlyState = readonly(state)
+  
+  // shallow 淺層響應式
+  const shallowObj = shallowReactive({
+    count: 0,
+    nested: { value: 1 }  // 嵌套對象不響應式
+  })
+  
+  // markRaw 標記為非響應式
+  const rawObj = markRaw({ heavy: 'data' })
+  
+  // toRaw 獲取原始對象
+  const raw = toRaw(state)
+  
+  return {
+    state,
+    readonlyState,
+    shallowObj,
+    rawObj
+  }
+}</div>
+        </div>
+
+        <!-- 範例 8: 自定義指令 v3 -->
+        <div class="example">
+            <h3>範例 8：Vue 3 自定義指令</h3>
+            <div class="feature-demo">
+                <div id="app8"></div>
+            </div>
+            <div class="code">
+// Vue 3 指令鉤子函數名稱變更
+const focusDirective = {
+  // Vue 2: bind, inserted, update, componentUpdated, unbind
+  // Vue 3: created, beforeMount, mounted, beforeUpdate, updated, beforeUnmount, unmounted
+  
+  mounted(el, binding) {
+    el.focus()
+  },
+  
+  updated(el, binding) {
+    if (binding.value !== binding.oldValue) {
+      el.style.backgroundColor = binding.value
+    }
+  }
+}
+
+// 註冊指令
+app.directive('focus', focusDirective)
+
+// 使用
+template: `<input v-focus="backgroundColor" />`</div>
+        </div>
+
+        <h2>🔄 從 Vue 2 遷移的關鍵變化</h2>
+        
+        <div class="tip-box">
+            <h3>📋 重要變更總結</h3>
+            <ul>
+                <li><strong>全局 API</strong>：從 Vue 全局對象改為應用實例</li>
+                <li><strong>生命週期</strong>：beforeDestroy → beforeUnmount，destroyed → unmounted</li>
+                <li><strong>指令鉤子</strong>：與組件生命週期保持一致</li>
+                <li><strong>v-model</strong>：支持多個 v-model，自定義修飾符</li>
+                <li><strong>Fragment</strong>：支持多根節點組件</li>
+                <li><strong>Teleport</strong>：替代 Vue 2 的 Portal</li>
+                <li><strong>Suspense</strong>：原生異步組件支持</li>
+            </ul>
+        </div>
+
+        <h2>🛠️ 實際開發建議</h2>
+
+        <div class="highlight">
+            <h3>💡 最佳實踐</h3>
+            <ul>
+                <li><strong>漸進式遷移</strong>：Vue 3 支持選項式 API，可漸進式採用組合式 API</li>
+                <li><strong>TypeScript 優先</strong>：Vue 3 對 TypeScript 支持更好</li>
+                <li><strong>組合式優先</strong>：新項目建議使用 Composition API</li>
+                <li><strong>響應式優化</strong>：合理使用 shallow、readonly 等 API 優化性能</li>
+                <li><strong>Teleport 應用</strong>：Modal、Toast、Tooltip 等使用 Teleport</li>
+            </ul>
+        </div>
+
+        <h2>📖 重點總結</h2>
+        <ul>
+            <li><strong>Provide/Inject</strong>：跨層級數據共享，避免 prop drilling</li>
+            <li><strong>Fragment</strong>：多根節點組件，更語義化的 DOM</li>
+            <li><strong>Teleport</strong>：將組件內容渲染到任意 DOM 位置</li>
+            <li><strong>Suspense</strong>：優雅處理異步組件加載狀態</li>
+            <li><strong>性能改進</strong>：更小的包體積，更快的運行速度</li>
+        </ul>
+
+        <h2>🎯 學習完成！</h2>
+        <p>恭喜你完成了 Vue 3 進階特性的學習！現在你已經掌握了：</p>
+        <ul>
+            <li><a href="01-basic-composition-api.html">✅ 基礎 Composition API</a></li>
+            <li><a href="02-reactive-refs.html">✅ 響應式系統</a></li>
+            <li><a href="03-computed-watch.html">✅ 計算屬性與監聽器</a></li>
+            <li><a href="04-lifecycle.html">✅ 生命週期鉤子</a></li>
+            <li><a href="05-composables.html">✅ Composables 進階</a></li>
+            <li><strong>✅ 進階特性（當前）</strong></li>
+        </ul>
+        
+        <h2>🎯 下一步</h2>
+        <ul>
+            <li><a href="05-composables.html">← 上一課：Composables 進階</a></li>
+            <li><a href="07-script-setup.html">下一課：Script Setup 語法糖 →</a></li>
+        </ul>
+        
+        <div class="highlight">
+            <strong>🚀 完成所有課程後的建議：</strong><br>
+            • 創建一個真實項目練習這些概念<br>
+            • 探索 Vue 3 生態系統（Pinia、Vue Router 4、VueUse）<br>    
+            • 學習與其他框架的整合（Nuxt 3、Vite）
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, reactive, provide, inject, defineAsyncComponent, Teleport, Suspense, readonly, h } = Vue
+        
+        // 範例 1: Provide/Inject
+        createApp({
+            template: `
+                <div :class="'theme-' + theme">
+                    <h4>🎨 主題管理系統</h4>
+                    <p>當前主題：{{ theme }}</p>
+                    <p>用戶：{{ user.name }} ({{ user.role }})</p>
+                    
+                    <button @click="toggleTheme">切換主題</button>
+                    <button @click="user.name = user.name === 'Vue 3 User' ? 'Alice' : 'Vue 3 User'">
+                        切換用戶
+                    </button>
+                    
+                    <div class="nested-component">
+                        <h5>📦 子組件</h5>
+                        <child-component />
+                    </div>
+                </div>
+            `,
+            setup() {
+                const theme = ref('light')
+                const user = reactive({
+                    name: 'Vue 3 User',
+                    role: 'Developer'
+                })
+                
+                function toggleTheme() {
+                    theme.value = theme.value === 'light' ? 'dark' : 'light'
+                }
+                
+                provide('theme', theme)
+                provide('user', readonly(user))
+                provide('api', {
+                    updateUser: (name) => {
+                        user.name = name
+                    }
+                })
+                
+                return { theme, user, toggleTheme }
+            },
+            components: {
+                'child-component': {
+                    template: `
+                        <div :class="'theme-' + theme">
+                            <p>子組件接收到的主題：{{ theme }}</p>
+                            <p>用戶名：{{ user.name }}</p>
+                            <grandchild-component />
+                        </div>
+                    `,
+                    setup() {
+                        const theme = inject('theme')
+                        const user = inject('user')
+                        return { theme, user }
+                    },
+                    components: {
+                        'grandchild-component': {
+                            template: `
+                                <div class="nested-component">
+                                    <h6>📦 孫子組件</h6>
+                                    <p>深層組件也能獲取：{{ theme }} 主題</p>
+                                    <p>配置語言：{{ config.language }}</p>
+                                    <button @click="api.updateUser('從孫子組件更新')">
+                                        從孫子組件更新用戶
+                                    </button>
+                                </div>
+                            `,
+                            setup() {
+                                const theme = inject('theme')
+                                const config = inject('config', { language: 'zh-TW' })
+                                const api = inject('api')
+                                return { theme, config, api }
+                            }
+                        }
+                    }
+                }
+            }
+        }).mount('#app1')
+        
+        // 範例 2: Fragment
+        createApp({
+            template: `
+                <div>
+                    <h4>📄 Fragment 演示</h4>
+                    <p>下面的組件有多個根節點：</p>
+                    <multi-root-component />
+                </div>
+            `,
+            components: {
+                'multi-root-component': {
+                    template: `
+                        <header style="background: #e8f4fd; padding: 10px; border-radius: 4px; margin: 5px 0;">
+                            📰 這是標題
+                        </header>
+                        <main style="background: #f0fff0; padding: 10px; border-radius: 4px; margin: 5px 0;">
+                            📝 這是主要內容
+                        </main>
+                        <footer style="background: #fff3cd; padding: 10px; border-radius: 4px; margin: 5px 0;">
+                            📋 這是底部 - 注意：這個組件有三個根節點！
+                        </footer>
+                    `
+                }
+            }
+        }).mount('#app2')
+        
+        // 範例 3: Teleport
+        createApp({
+            template: `
+                <div>
+                    <h4>🚀 Teleport 傳送門</h4>
+                    <button @click="showModal = true">🪟 打開 Modal</button>
+                    <p><small>Modal 會被傳送到 body 元素下</small></p>
+                    
+                    <Teleport to="body">
+                        <div v-if="showModal" class="modal-overlay" @click="showModal = false">
+                            <div class="modal-content" @click.stop>
+                                <h3>📢 Teleport Modal</h3>
+                                <p>這個 Modal 通過 Teleport 渲染到 body 下，避免了 z-index 層級問題。</p>
+                                <p>點擊遮罩或按鈕可以關閉。</p>
+                                <button @click="showModal = false">❌ 關閉</button>
+                            </div>
+                        </div>
+                    </Teleport>
+                </div>
+            `,
+            setup() {
+                const showModal = ref(false)
+                return { showModal }
+            }
+        }).mount('#app3')
+        
+        // 範例 4: Suspense
+        createApp({
+            template: `
+                <div>
+                    <h4>⏰ Suspense 異步組件</h4>
+                    <button @click="showAsync = !showAsync">
+                        {{ showAsync ? '隱藏' : '顯示' }} 異步組件
+                    </button>
+                    
+                    <div v-if="showAsync">
+                        <Suspense>
+                            <template #default>
+                                <async-component />
+                            </template>
+                            <template #fallback>
+                                <div class="loading">
+                                    <div class="spinner"></div>
+                                    異步組件載入中...
+                                </div>
+                            </template>
+                        </Suspense>
+                    </div>
+                </div>
+            `,
+            setup() {
+                const showAsync = ref(false)
+                return { showAsync }
+            },
+            components: {
+                'async-component': defineAsyncComponent({
+                    loader: () => {
+                        return new Promise((resolve) => {
+                            setTimeout(() => {
+                                resolve({
+                                    template: `
+                                        <div style="background: #d4edda; padding: 15px; border-radius: 4px; margin: 10px 0;">
+                                            <h4>🎉 異步組件載入完成！</h4>
+                                            <p>這個組件模擬了 2 秒的載入時間。</p>
+                                            <p>當前時間：{{ new Date().toLocaleTimeString() }}</p>
+                                        </div>
+                                    `,
+                                    setup() {
+                                        return {}
+                                    }
+                                })
+                            }, 2000)
+                        })
+                    },
+                    loadingComponent: {
+                        template: `
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                組件載入中...
+                            </div>
+                        `
+                    },
+                    errorComponent: {
+                        template: `
+                            <div class="error">
+                                ❌ 組件載入失敗，請重試
+                            </div>
+                        `
+                    },
+                    timeout: 5000
+                })
+            }
+        }).mount('#app4')
+        
+        // 範例 5: 渲染函數
+        createApp({
+            template: `
+                <div>
+                    <h4>🔧 渲染函數模式</h4>
+                    <p>下面的組件使用渲染函數創建：</p>
+                    <render-function-component />
+                </div>
+            `,
+            components: {
+                'render-function-component': {
+                    setup() {
+                        const count = ref(0)
+                        const message = ref('Hello, Render Function!')
+                        
+                        return () => h('div', {
+                            style: {
+                                background: '#f8f9fa',
+                                padding: '15px',
+                                borderRadius: '4px',
+                                margin: '10px 0'
+                            }
+                        }, [
+                            h('p', message.value),
+                            h('p', `計數: ${count.value}`),
+                            h('button', {
+                                onClick: () => count.value++,
+                                style: { 
+                                    background: '#8e44ad',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '5px 10px',
+                                    borderRadius: '3px',
+                                    cursor: 'pointer',
+                                    marginRight: '5px'
+                                }
+                            }, '+1'),
+                            h('button', {
+                                onClick: () => {
+                                    message.value = message.value === 'Hello, Render Function!'
+                                        ? 'Render Function is Powerful!' 
+                                        : 'Hello, Render Function!'
+                                },
+                                style: { 
+                                    background: '#27ae60',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '5px 10px',
+                                    borderRadius: '3px',
+                                    cursor: 'pointer'
+                                }
+                            }, '切換信息')
+                        ])
+                    }
+                }
+            }
+        }).mount('#app5')
+        
+        // 範例 6: 應用實例
+        const app6 = createApp({
+            template: `
+                <div>
+                    <h4>🔧 應用實例 API</h4>
+                    <p>這個應用實例演示了組件、指令、混入的註冊：</p>
+                    <custom-component />
+                    <input v-highlight="highlightColor" v-model="inputValue" placeholder="帶高亮指令的輸入框">
+                    <p>輸入值：{{ inputValue }}</p>
+                    <p>混入提供的方法：{{ formatMessage('Vue 3 很棒！') }}</p>
+                    
+                    <p>
+                        高亮顏色：
+                        <select v-model="highlightColor">
+                            <option value="#fff3cd">黃色</option>
+                            <option value="#d1ecf1">藍色</option>
+                            <option value="#d4edda">綠色</option>
+                            <option value="#f8d7da">紅色</option>
+                        </select>
+                    </p>
+                </div>
+            `,
+            setup() {
+                const inputValue = ref('')
+                const highlightColor = ref('#fff3cd')
+                return { inputValue, highlightColor }
+            }
+        })
+        
+        // 註冊組件
+        app6.component('custom-component', {
+            template: `
+                <div style="background: #e8f4fd; padding: 10px; border-radius: 4px; margin: 10px 0;">
+                    <p>📦 這是通過 app.component() 註冊的組件</p>
+                    <p>組件實例 ID：{{ $id }}</p>
+                </div>
+            `
+        })
+        
+        // 註冊指令
+        app6.directive('highlight', {
+            mounted(el, binding) {
+                el.style.backgroundColor = binding.value
+            },
+            updated(el, binding) {
+                el.style.backgroundColor = binding.value
+            }
+        })
+        
+        // 註冊混入
+        app6.mixin({
+            methods: {
+                formatMessage(msg) {
+                    return `🎉 ${msg} 🎉`
+                }
+            }
+        })
+        
+        app6.mount('#app6')
+        
+        // 範例 7: 響應式進階
+        createApp({
+            template: `
+                <div>
+                    <h4>🧪 響應式 API 進階</h4>
+                    
+                    <div style="margin: 10px 0;">
+                        <h5>📝 可寫狀態：</h5>
+                        <p>計數：{{ state.count }}</p>
+                        <button @click="state.count++">增加</button>
+                    </div>
+                    
+                    <div style="margin: 10px 0;">
+                        <h5>📖 只讀狀態：</h5>
+                        <p>只讀計數：{{ readonlyState.count }}</p>
+                        <button @click="tryModifyReadonly">嘗試修改（會失敗）</button>
+                    </div>
+                    
+                    <div style="margin: 10px 0;">
+                        <h5>🔍 淺層響應式：</h5>
+                        <p>頂層：{{ shallowObj.count }}</p>
+                        <p>嵌套：{{ shallowObj.nested.value }}</p>
+                        <button @click="shallowObj.count++">修改頂層（響應式）</button>
+                        <button @click="shallowObj.nested.value++">修改嵌套（非響應式）</button>
+                    </div>
+                    
+                    <div style="margin: 10px 0;">
+                        <h5>🔍 檢查工具：</h5>
+                        <p>state 是響應式？{{ isReactiveValue }}</p>
+                        <p>readonlyState 是只讀？{{ isReadonlyValue }}</p>
+                        <p>count 是 ref？{{ isRefValue }}</p>
+                    </div>
+                </div>
+            `,
+            setup() {
+                const count = ref(0)
+                const state = reactive({ count: 0 })
+                const readonlyState = readonly(state)
+                
+                const shallowObj = Vue.shallowReactive({
+                    count: 0,
+                    nested: { value: 1 }
+                })
+                
+                const isReactiveValue = Vue.isReactive(state)
+                const isReadonlyValue = Vue.isReadonly(readonlyState)
+                const isRefValue = Vue.isRef(count)
+                
+                function tryModifyReadonly() {
+                    try {
+                        readonlyState.count++
+                        alert('修改成功')
+                    } catch (error) {
+                        console.warn('不能修改只讀狀態:', error)
+                        alert('修改失敗：只讀狀態不能修改（檢查控制台）')
+                    }
+                }
+                
+                return {
+                    state,
+                    readonlyState,
+                    shallowObj,
+                    isReactiveValue,
+                    isReadonlyValue,
+                    isRefValue,
+                    tryModifyReadonly
+                }
+            }
+        }).mount('#app7')
+        
+        // 範例 8: 自定義指令
+        const app8 = createApp({
+            template: `
+                <div>
+                    <h4>🎨 Vue 3 自定義指令</h4>
+                    
+                    <div style="margin: 10px 0;">
+                        <input v-focus v-model="text1" placeholder="自動聚焦輸入框">
+                    </div>
+                    
+                    <div style="margin: 10px 0;">
+                        <input v-color-highlight="color" v-model="text2" placeholder="動態背景色輸入框">
+                        <select v-model="color">
+                            <option value="#fff3cd">黃色</option>
+                            <option value="#d1ecf1">藍色</option>
+                            <option value="#d4edda">綠色</option>
+                        </select>
+                    </div>
+                    
+                    <div style="margin: 10px 0;">
+                        <div v-click-outside="handleClickOutside" 
+                             style="border: 2px solid #ddd; padding: 10px; background: #f8f9fa;">
+                            <p>點擊這個區域外面試試</p>
+                            <p>外部點擊次數：{{ outsideClicks }}</p>
+                        </div>
+                    </div>
+                </div>
+            `,
+            setup() {
+                const text1 = ref('')
+                const text2 = ref('')
+                const color = ref('#fff3cd')
+                const outsideClicks = ref(0)
+                
+                function handleClickOutside() {
+                    outsideClicks.value++
+                }
+                
+                return {
+                    text1,
+                    text2,
+                    color,
+                    outsideClicks,
+                    handleClickOutside
+                }
+            }
+        })
+        
+        // 自動聚焦指令
+        app8.directive('focus', {
+            mounted(el) {
+                el.focus()
+            }
+        })
+        
+        // 動態背景色指令
+        app8.directive('color-highlight', {
+            mounted(el, binding) {
+                el.style.backgroundColor = binding.value
+            },
+            updated(el, binding) {
+                el.style.backgroundColor = binding.value
+            }
+        })
+        
+        // 外部點擊指令
+        app8.directive('click-outside', {
+            mounted(el, binding) {
+                el._clickOutside = (event) => {
+                    if (!(el === event.target || el.contains(event.target))) {
+                        binding.value()
+                    }
+                }
+                document.addEventListener('click', el._clickOutside)
+            },
+            beforeUnmount(el) {
+                document.removeEventListener('click', el._clickOutside)
+            }
+        })
+        
+        app8.mount('#app8')
+    </script>
+</body>
+</html>

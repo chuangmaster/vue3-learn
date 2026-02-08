@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>07 - Script Setup 語法糖</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .example {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #e74c3c;
+            border-radius: 5px;
+            background: #fff6f6;
+        }
+        .code {
+            background: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            font-size: 0.9em;
+        }
+        button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #c0392b;
+        }
+        input, select, textarea {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px;
+        }
+        .highlight {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .tip-box {
+            background: #e8f4fd;
+            border: 1px solid #b3d7ff;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .new-feature {
+            background: #e8f5e9;
+            border: 1px solid #c8e6c9;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .warning {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .demo {
+            border: 2px dashed #e74c3c;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            background: #fefefe;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .comparison-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+        .comparison-item h4 {
+            margin-top: 0;
+            color: #495057;
+        }
+        @media (max-width: 768px) {
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+        .macro-list {
+            background: #f0f8ff;
+            border: 1px solid #b3d9ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ 第七課：Script Setup 語法糖</h1>
+        
+        <h2>🎯 什麼是 `<script setup>`？</h2>
+        <p>`<script setup>` 是 Vue 3.2+ 引入的編譯時語法糖，讓你能以更簡潔的方式編寫 Composition API 代碼。</p>
+        
+        <div class="new-feature">
+            <strong>🆕 Vue 3.3+ 新增：</strong>更多強大的編譯器宏如 `defineModel`、`defineSlots` 等，讓開發更加便捷！
+        </div>
+
+        <!-- 範例 1: 基本語法對比 -->
+        <div class="example">
+            <h3>範例 1：基本語法對比</h3>
+            <div class="comparison">
+                <div class="comparison-item">
+                    <h4>🚀 使用 &lt;script setup&gt;</h4>
+                    <div class="code">
+&lt;script setup&gt;
+import { ref, computed } from 'vue'
+
+// 直接聲明就可以在模板中使用
+const count = ref(0)
+const doubleCount = computed(() => count.value * 2)
+
+function increment() {
+  count.value++
+}
+
+// 自動暴露給模板，無需 return
+&lt;/script&gt;</div>
+                </div>
+                
+                <div class="comparison-item">
+                    <h4>📝 傳統 Composition API</h4>
+                    <div class="code">
+&lt;script&gt;
+import { ref, computed } from 'vue'
+
+export default {
+  setup() {
+    const count = ref(0)
+    const doubleCount = computed(() => count.value * 2)
+
+    function increment() {
+      count.value++
+    }
+
+    // 必須手動 return
+    return {
+      count,
+      doubleCount,
+      increment
+    }
+  }
+}
+&lt;/script&gt;</div>
+                </div>
+            </div>
+            
+            <div class="demo">
+                <div id="app1"></div>
+            </div>
+        </div>
+
+        <!-- 範例 2: defineProps -->
+        <div class="example">
+            <h3>範例 2：defineProps - 定義 Props</h3>
+            <div class="demo">
+                <div id="app2"></div>
+            </div>
+            <div class="code">
+&lt;script setup&gt;
+// 基本用法
+const props = defineProps(['title', 'count'])
+
+// TypeScript 推薦用法
+const props = defineProps&lt;{
+  title: string
+  count?: number
+}&gt;()
+
+// 帶有默認值的用法
+const props = withDefaults(defineProps&lt;{
+  title: string
+  count?: number
+  type?: 'primary' | 'secondary'
+}&gt;(), {
+  count: 0,
+  type: 'primary'
+})
+
+// 運行時聲明（帶驗証）
+const props = defineProps({
+  title: {
+    type: String,
+    required: true
+  },
+  count: {
+    type: Number,
+    default: 0,
+    validator: (value) =&gt; value &gt;= 0
+  }
+})
+&lt;/script&gt;</div>
+        </div>
+
+        <!-- 範例 3: defineEmits -->
+        <div class="example">
+            <h3>範例 3：defineEmits - 定義事件</h3>
+            <div class="demo">
+                <div id="app3"></div>
+            </div>
+            <div class="code">
+&lt;script setup&gt;
+// 基本用法
+const emit = defineEmits(['update', 'delete'])
+
+// TypeScript 推薦用法
+const emit = defineEmits&lt;{
+  update: [id: number, value: string]
+  delete: [id: number]
+  submit: []  // 無參數事件
+}&gt;()
+
+// 運行時聲明（帶驗証）
+const emit = defineEmits({
+  update: (id, value) =&gt; {
+    return typeof id === 'number' && typeof value === 'string'
+  },
+  delete: (id) =&gt; typeof id === 'number',
+  submit: null  // 無驗証
+})
+
+function handleUpdate(value) {
+  emit('update', props.id, value)
+}
+&lt;/script&gt;</div>
+        </div>
+
+        <!-- 範例 4: defineModel -->
+        <div class="example">
+            <h3>範例 4：defineModel - v-model 語法糖 (Vue 3.3+)</h3>
+            <div class="demo">
+                <div id="app4"></div>
+            </div>
+            <div class="code">
+&lt;!-- 父組件 --&gt;
+&lt;CustomInput v-model="message" /&gt;
+
+&lt;!-- 子組件 - 使用 defineModel --&gt;
+&lt;script setup&gt;
+// 🎉 超簡單的 v-model 實現！
+const model = defineModel()
+
+// 等同於以下代碼：
+// const props = defineProps(['modelValue'])
+// const emit = defineEmits(['update:modelValue'])
+// const model = computed({
+//   get: () =&gt; props.modelValue,
+//   set: (val) =&gt; emit('update:modelValue', val)
+// })
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;input v-model="model" /&gt;
+&lt;/template&gt;</div>
+            
+            <div class="new-feature">
+                <strong>🚀 defineModel 優勢：</strong>大幅簡化了 v-model 的實現，不再需要手寫 props + emit 的模式！
+            </div>
+        </div>
+
+        <!-- 範例 5: 多個 v-model -->
+        <div class="example">
+            <h3>範例 5：多個 v-model 與修飾符</h3>
+            <div class="demo">
+                <div id="app5"></div>
+            </div>
+            <div class="code">
+&lt;script setup&gt;
+// 多個 v-model
+const firstName = defineModel('firstName')
+const lastName = defineModel('lastName')
+
+// 帶默認值
+const age = defineModel('age', { default: 18 })
+
+// 帶修飾符的 v-model
+const username = defineModel('username', {
+  set(value) {
+    // 自定義處理邏輯
+    return value.toLowerCase().trim()
+  }
+})
+
+// 修飾符的高級用法
+const email = defineModel('email', {
+  get(value) {
+    return value
+  },
+  set(value, modifiers) {
+    if (modifiers.trim) {
+      return value.trim()
+    }
+    if (modifiers.capitalize) {
+      return value.charAt(0).toUpperCase() + value.slice(1)
+    }
+    return value
+  }
+})
+&lt;/script&gt;
+
+&lt;!-- 使用方式 --&gt;
+&lt;UserForm 
+  v-model:firstName="user.firstName"
+  v-model:lastName="user.lastName" 
+  v-model:age="user.age"
+  v-model:username="user.username"
+  v-model:email.trim="user.email"
+/&gt;</div>
+        </div>
+
+        <!-- 範例 6: defineExpose -->
+        <div class="example">
+            <h3>範例 6：defineExpose - 暴露組件方法</h3>
+            <div class="demo">
+                <div id="app6"></div>
+            </div>
+            <div class="code">
+&lt;script setup&gt;
+import { ref } from 'vue'
+
+const count = ref(0)
+const message = ref('Hello')
+
+function increment() {
+  count.value++
+}
+
+function reset() {
+  count.value = 0
+  message.value = 'Reset!'
+}
+
+// 明確指定哪些內容對父組件可見
+defineExpose({
+  count,
+  reset,
+  // 不暴露 increment 和 message
+})
+&lt;/script&gt;
+
+&lt;!-- 父組件中 --&gt;
+&lt;script setup&gt;
+const childRef = ref()
+
+function resetChild() {
+  childRef.value.reset()  // ✅ 可以調用
+  // childRef.value.increment()  // ❌ 無法調用，未暴露
+}
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;ChildComponent ref="childRef" /&gt;
+&lt;/template&gt;</div>
+        </div>
+
+        <!-- 範例 7: defineSlots (Vue 3.3+) -->
+        <div class="example">
+            <h3>範例 7：defineSlots - TypeScript 插槽支持 (Vue 3.3+)</h3>
+            <div class="demo">
+                <div id="app7"></div>
+            </div>
+            <div class="code">
+&lt;script setup lang="ts"&gt;
+// 為插槽提供 TypeScript 類型支持
+defineSlots&lt;{
+  default(props: { message: string }): any
+  header(): any
+  footer(props: { year: number }): any
+}&gt;()
+
+// 也可以使用函數語法
+defineSlots&lt;{
+  default: (props: { message: string }) =&gt; any
+  header: () =&gt; any
+  footer: (props: { year: number }) =&gt; any
+}&gt;()
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;slot name="header"&gt;&lt;/slot&gt;
+    &lt;slot :message="'Hello from slot'"&gt;&lt;/slot&gt;
+    &lt;slot name="footer" :year="2024"&gt;&lt;/slot&gt;
+  &lt;/div&gt;
+&lt;/template&gt;</div>
+            
+            <div class="tip-box">
+                <strong>💡 defineSlots 作用：</strong>主要為 TypeScript 用戶提供插槽的類型檢查，運行時無實際效果。
+            </div>
+        </div>
+
+        <!-- 範例 8: 實際應用綜合示例 -->
+        <div class="example">
+            <h3>範例 8：綜合實戰 - 用戶編輯組件</h3>
+            <div class="demo">
+                <div id="app8"></div>
+            </div>
+            <div class="code">
+&lt;script setup&gt;
+// Props 定義
+const props = withDefaults(defineProps&lt;{
+  user?: {
+    name: string
+    email: string
+    age: number
+  }
+  readonly?: boolean
+}&gt;(), {
+  readonly: false
+})
+
+// 事件定義
+const emit = defineEmits&lt;{
+  save: [user: { name: string; email: string; age: number }]
+  cancel: []
+}&gt;()
+
+// v-model 定義
+const name = defineModel('name', { default: '' })
+const email = defineModel('email', { default: '' })
+const age = defineModel('age', { default: 18 })
+
+// 內部狀態
+const isValid = computed(() =&gt; 
+  name.value.length &gt; 0 && 
+  email.value.includes('@') && 
+  age.value &gt; 0
+)
+
+// 方法
+function handleSave() {
+  if (isValid.value) {
+    emit('save', {
+      name: name.value,
+      email: email.value,
+      age: age.value
+    })
+  }
+}
+
+function handleCancel() {
+  emit('cancel')
+}
+
+// 暴露給父組件
+defineExpose({
+  isValid,
+  save: handleSave
+})
+&lt;/script&gt;</div>
+        </div>
+
+        <!-- 編譯器宏列表 -->
+        <div class="macro-list">
+            <h3>🛠️ 編譯器宏完整列表</h3>
+            <ul>
+                <li><strong>defineProps</strong> - 定義組件 props</li>
+                <li><strong>defineEmits</strong> - 定義組件事件</li>
+                <li><strong>defineModel</strong> - 定義 v-model (Vue 3.3+)</li>
+                <li><strong>defineExpose</strong> - 暴露組件內部方法/狀態</li>
+                <li><strong>defineSlots</strong> - TypeScript 插槽類型 (Vue 3.3+)</li>
+                <li><strong>withDefaults</strong> - 為 props 提供默認值</li>
+                <li><strong>defineOptions</strong> - 定義組件選項 (Vue 3.3+)</li>
+            </ul>
+        </div>
+
+        <!-- 最佳實踐 -->
+        <div class="highlight">
+            <h3>✅ 最佳實踐</h3>
+            <ul>
+                <li><strong>TypeScript 優先：</strong>使用 TypeScript 語法獲得更好的類型支持和開發體驗</li>
+                <li><strong>defineModel 優先：</strong>Vue 3.3+ 建議使用 defineModel 代替手動實現 v-model</li>
+                <li><strong>適度暴露：</strong>使用 defineExpose 只暴露必要的方法和狀態</li>
+                <li><strong>合理默認值：</strong>使用 withDefaults 為 props 提供合理的默認值</li>
+                <li><strong>事件命名：</strong>使用清晰的事件命名，遵循 update:propName 約定</li>
+            </ul>
+        </div>
+
+        <div class="warning">
+            <h3>⚠️ 注意事項</h3>
+            <ul>
+                <li>編譯器宏只能在 &lt;script setup&gt; 中使用</li>
+                <li>defineModel 需要 Vue 3.3+ 版本支持</li>
+                <li>不能在條件語句或函數中調用這些宏</li>
+                <li>宏會在編譯時展開，運行時不存在</li>
+            </ul>
+        </div>
+
+        <h2>📖 重點總結</h2>
+        <ul>
+            <li><strong>&lt;script setup&gt;</strong> 提供了更簡潔的語法</li>
+            <li><strong>defineModel</strong> 大幅簡化了 v-model 的實現</li>
+            <li><strong>编譯器宏</strong>讓組件開發更加便捷和類型安全</li>
+            <li><strong>TypeScript 支持</strong>得到了全面加強</li>
+        </ul>
+
+        <h2>🎯 恭喜完成！</h2>
+        <p>🎉 你已經完成了整個 Vue 3 學習教程！現在你已經掌握了：</p>
+        <ul>
+            <li><a href="01-basic-composition-api.html">✅ 基礎 Composition API</a></li>
+            <li><a href="02-reactive-refs.html">✅ 響應式系統深入</a></li>
+            <li><a href="03-computed-watch.html">✅ 計算屬性與監聽器</a></li>
+            <li><a href="04-lifecycle.html">✅ 生命週期鉤子</a></li>
+            <li><a href="05-composables.html">✅ Composables 進階</a></li>
+            <li><a href="06-advanced.html">✅ 進階特性探索</a></li>
+            <li><strong>✅ Script Setup 語法糖（當前）</strong></li>
+        </ul>
+        
+        <div class="highlight">
+            <h3>🚀 完整學習路徑達成！</h3>
+            <p>你現在已經具備了使用現代 Vue 3 開發應用的所有必要技能：</p>
+            <ul>
+                <li>✅ Composition API 的核心概念</li>
+                <li>✅ 響應式系統的深入理解</li>
+                <li>✅ 生命週期和副作用管理</li>
+                <li>✅ 可重用邏輯的 Composables 模式</li>
+                <li>✅ 高級特性如 Teleport、Suspense</li>
+                <li>✅ 現代化的 Script Setup 語法糖</li>
+            </ul>
+        </div>
+
+        <h2>🎯 下一步</h2>
+        <ul>
+            <li><a href="06-advanced.html">← 上一課：進階特性探索</a></li>
+            <li><a href="../README.md">📖 回到總教程</a></li>
+            <li><a href="../index.html">🏠 回到首頁</a></li>
+        </ul>
+        
+        <div class="tip-box">
+            <h3>🎓 學習建議</h3>
+            <ul>
+                <li><strong>實戰練習：</strong>創建一個完整的 Vue 3 項目，應用所有學到的概念</li>
+                <li><strong>生態探索：</strong>學習 Pinia（狀態管理）、Vue Router 4、VueUse</li>
+                <li><strong>工具鏈：</strong>熟悉 Vite、TypeScript、ESLint 等現代工具</li>
+                <li><strong>社區參與：</strong>在 GitHub 上瀏覽優秀的 Vue 3 項目源碼</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, defineComponent } = Vue
+        
+        // 模擬 script setup 的效果，因為我們在瀏覽器環境中無法直接使用 <script setup>
+        
+        // 範例 1：基本語法演示
+        createApp({
+            template: `
+                <div>
+                    <h4>✨ 模擬 &lt;script setup&gt; 效果</h4>
+                    <p>計數：{{ count }}</p>
+                    <p>雙倍計數：{{ doubleCount }}</p>
+                    <button @click="increment">增加</button>
+                    <button @click="count = 0">重置</button>
+                    <p><small>注意：瀏覽器環境中我們模擬 script setup 的效果</small></p>
+                </div>
+            `,
+            setup() {
+                // 模擬 <script setup> 的簡潔性
+                const count = ref(0)
+                const doubleCount = computed(() => count.value * 2)
+
+                function increment() {
+                    count.value++
+                }
+
+                // 在 <script setup> 中，這些會自動暴露，無需手動 return
+                return { count, doubleCount, increment }
+            }
+        }).mount('#app1')
+
+        // 範例 2：Props 演示
+        createApp({
+            template: `
+                <div>
+                    <h4>📋 Props 演示</h4>
+                    <props-demo 
+                        :title="title" 
+                        :count="count" 
+                        type="primary"
+                        @update="handleUpdate"
+                    />
+                    <div style="margin: 10px 0;">
+                        <input v-model="title" placeholder="修改標題">
+                        <input type="number" v-model.number="count" placeholder="修改數量">
+                    </div>
+                </div>
+            `,
+            setup() {
+                const title = ref('測試標題')
+                const count = ref(5)
+
+                function handleUpdate(newTitle, newCount) {
+                    title.value = newTitle
+                    count.value = newCount
+                }
+
+                return { title, count, handleUpdate }
+            },
+            components: {
+                'props-demo': defineComponent({
+                    props: {
+                        title: {
+                            type: String,
+                            required: true
+                        },
+                        count: {
+                            type: Number,
+                            default: 0,
+                            validator: (value) => value >= 0
+                        },
+                        type: {
+                            type: String,
+                            default: 'primary'
+                        }
+                    },
+                    emits: ['update'],
+                    template: `
+                        <div style="border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #f8f9fa;">
+                            <h5>{{ title }}</h5>
+                            <p>數量：{{ count }} (類型：{{ type }})</p>
+                            <button @click="$emit('update', title + ' (更新)', count + 1)">
+                                觸發更新事件
+                            </button>
+                        </div>
+                    `
+                })
+            }
+        }).mount('#app2')
+
+        // 範例 3：Emits 演示  
+        createApp({
+            template: `
+                <div>
+                    <h4>📡 事件演示</h4>
+                    <emits-demo @update="handleUpdate" @delete="handleDelete" @submit="handleSubmit" />
+                    <div v-if="lastEvent" style="margin: 10px 0; padding: 10px; background: #e8f5e9; border-radius: 4px;">
+                        最後事件：{{ lastEvent }}
+                    </div>
+                </div>
+            `,
+            setup() {
+                const lastEvent = ref('')
+
+                function handleUpdate(id, value) {
+                    lastEvent.value = \`Update: ID=\${id}, Value=\${value}\`
+                }
+
+                function handleDelete(id) {
+                    lastEvent.value = \`Delete: ID=\${id}\`
+                }
+
+                function handleSubmit() {
+                    lastEvent.value = 'Submit: 無參數'
+                }
+
+                return {
+                    lastEvent,
+                    handleUpdate,
+                    handleDelete,
+                    handleSubmit
+                }
+            },
+            components: {
+                'emits-demo': defineComponent({
+                    emits: {
+                        update: (id, value) => {
+                            return typeof id === 'number' && typeof value === 'string'
+                        },
+                        delete: (id) => typeof id === 'number',
+                        submit: null
+                    },
+                    template: `
+                        <div style="border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #f0f8ff;">
+                            <h5>事件發送組件</h5>
+                            <button @click="$emit('update', 123, 'test value')">
+                                發送 Update 事件
+                            </button>
+                            <button @click="$emit('delete', 456)">
+                                發送 Delete 事件
+                            </button>
+                            <button @click="$emit('submit')">
+                                發送 Submit 事件
+                            </button>
+                        </div>
+                    `
+                })
+            }
+        }).mount('#app3')
+
+        // 範例 4：模擬 defineModel
+        createApp({
+            template: `
+                <div>
+                    <h4>🎯 v-model 語法糖演示</h4>
+                    <p>父組件值：{{ message }}</p>
+                    <custom-input v-model="message" />
+                    <div style="margin: 10px 0;">
+                        <input v-model="message" placeholder="父組件直接修改">
+                    </div>
+                    <p><small>兩個輸入框會保持同步</small></p>
+                </div>
+            `,
+            setup() {
+                const message = ref('Hello defineModel!')
+                return { message }
+            },
+            components: {
+                'custom-input': defineComponent({
+                    props: ['modelValue'],
+                    emits: ['update:modelValue'],
+                    template: `
+                        <div style="border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #fff8f0;">
+                            <label>子組件 (模擬 defineModel)：</label>
+                            <input 
+                                :value="modelValue" 
+                                @input="$emit('update:modelValue', $event.target.value)"
+                                style="width: 200px;"
+                            />
+                        </div>
+                    `
+                })
+            }
+        }).mount('#app4')
+
+        // 範例 5：多個 v-model 演示
+        createApp({
+            template: `
+                <div>
+                    <h4>👥 多個 v-model 演示</h4>
+                    <multi-model-form 
+                        v-model:firstName="user.firstName"
+                        v-model:lastName="user.lastName"
+                        v-model:age="user.age"
+                    />
+                    <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+                        <strong>用戶資訊：</strong><br>
+                        姓名：{{ user.firstName }} {{ user.lastName }}<br>
+                        年齡：{{ user.age }}
+                    </div>
+                </div>
+            `,
+            setup() {
+                const user = ref({
+                    firstName: '張',
+                    lastName: '小明',
+                    age: 25
+                })
+
+                return { user }
+            },
+            components: {
+                'multi-model-form': defineComponent({
+                    props: ['firstName', 'lastName', 'age'],
+                    emits: ['update:firstName', 'update:lastName', 'update:age'],
+                    template: `
+                        <div style="border: 1px solid #ddd; padding: 15px; border-radius: 4px; background: #f0fff0;">
+                            <h5>多個 v-model 表單</h5>
+                            <div>
+                                <label>姓氏：</label>
+                                <input 
+                                    :value="firstName" 
+                                    @input="$emit('update:firstName', $event.target.value)"
+                                >
+                            </div>
+                            <div>
+                                <label>名字：</label>
+                                <input 
+                                    :value="lastName" 
+                                    @input="$emit('update:lastName', $event.target.value)"
+                                >
+                            </div>
+                            <div>
+                                <label>年齡：</label>
+                                <input 
+                                    type="number" 
+                                    :value="age" 
+                                    @input="$emit('update:age', Number($event.target.value))"
+                                >
+                            </div>
+                        </div>
+                    `
+                })
+            }
+        }).mount('#app5')
+
+        // 範例 6：defineExpose 演示
+        createApp({
+            template: `
+                <div>
+                    <h4>🔓 defineExpose 演示</h4>
+                    <expose-demo ref="childRef" />
+                    <div style="margin: 10px 0;">
+                        <button @click="resetChild">父組件重置子組件</button>
+                        <button @click="getChildCount">獲取子組件計數</button>
+                    </div>
+                    <p v-if="childCount !== null">子組件計數：{{ childCount }}</p>
+                </div>
+            `,
+            setup() {
+                const childRef = ref()
+                const childCount = ref(null)
+
+                function resetChild() {
+                    if (childRef.value) {
+                        childRef.value.reset()
+                    }
+                }
+
+                function getChildCount() {
+                    if (childRef.value) {
+                        childCount.value = childRef.value.count
+                    }
+                }
+
+                return {
+                    childRef,
+                    childCount,
+                    resetChild,
+                    getChildCount
+                }
+            },
+            components: {
+                'expose-demo': defineComponent({
+                    template: `
+                        <div style="border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #fff0f5;">
+                            <h5>子組件</h5>
+                            <p>計數：{{ count }}</p>
+                            <p>信息：{{ message }}</p>
+                            <button @click="increment">增加 (內部方法)</button>
+                        </div>
+                    `,
+                    setup(props, { expose }) {
+                        const count = ref(0)
+                        const message = ref('Hello')
+
+                        function increment() {
+                            count.value++
+                        }
+
+                        function reset() {
+                            count.value = 0
+                            message.value = 'Reset!'
+                        }
+
+                        // 模擬 defineExpose
+                        expose({
+                            count: computed(() => count.value),
+                            reset
+                            // 注意：increment 和 message 沒有暴露
+                        })
+
+                        return {
+                            count,
+                            message,
+                            increment
+                        }
+                    }
+                })
+            }
+        }).mount('#app6')
+
+        // 範例 7：插槽演示
+        createApp({
+            template: `
+                <div>
+                    <h4>📦 插槽類型演示</h4>
+                    <slot-demo>
+                        <template #header>
+                            <h5 style="color: #e74c3c;">自定義標題</h5>
+                        </template>
+                        
+                        <template #default="{ message }">
+                            <p>接收到插槽數據：{{ message }}</p>
+                        </template>
+                        
+                        <template #footer="{ year }">
+                            <small>版權所有 © {{ year }}</small>
+                        </template>
+                    </slot-demo>
+                </div>
+            `,
+            components: {
+                'slot-demo': defineComponent({
+                    template: `
+                        <div style="border: 1px solid #ddd; padding: 15px; border-radius: 4px; background: #f9f9f9;">
+                            <slot name="header"></slot>
+                            <slot :message="'Hello from slot'"></slot>
+                            <slot name="footer" :year="2024"></slot>
+                        </div>
+                    `
+                })
+            }
+        }).mount('#app7')
+
+        // 範例 8：綜合實戰
+        createApp({
+            template: `
+                <div>
+                    <h4>🎯 綜合實戰：用戶編輯組件</h4>
+                    <user-editor 
+                        v-model:name="userData.name"
+                        v-model:email="userData.email"
+                        v-model:age="userData.age"
+                        :readonly="isReadonly"
+                        @save="handleSave"
+                        @cancel="handleCancel"
+                        ref="editorRef"
+                    />
+                    <div style="margin: 10px 0;">
+                        <label>
+                            <input type="checkbox" v-model="isReadonly">
+                            只讀模式
+                        </label>
+                        <button @click="forceValidation" style="margin-left: 10px;">
+                            檢查表單有效性
+                        </button>
+                    </div>
+                    <div v-if="saveMessage" style="margin: 10px 0; padding: 10px; background: #d4edda; border-radius: 4px;">
+                        {{ saveMessage }}
+                    </div>
+                </div>
+            `,
+            setup() {
+                const userData = ref({
+                    name: 'John Doe',
+                    email: 'john@example.com',
+                    age: 30
+                })
+                const isReadonly = ref(false)
+                const saveMessage = ref('')
+                const editorRef = ref()
+
+                function handleSave(user) {
+                    saveMessage.value = \`用戶已保存：\${JSON.stringify(user)}\`
+                    setTimeout(() => saveMessage.value = '', 3000)
+                }
+
+                function handleCancel() {
+                    saveMessage.value = '操作已取消'
+                    setTimeout(() => saveMessage.value = '', 2000)
+                }
+
+                function forceValidation() {
+                    const isValid = editorRef.value?.isValid
+                    alert(\`表單有效性：\${isValid ? '✅ 有效' : '❌ 無效'}\`)
+                }
+
+                return {
+                    userData,
+                    isReadonly,
+                    saveMessage,
+                    editorRef,
+                    handleSave,
+                    handleCancel,
+                    forceValidation
+                }
+            },
+            components: {
+                'user-editor': defineComponent({
+                    props: {
+                        name: String,
+                        email: String,
+                        age: Number,
+                        readonly: Boolean
+                    },
+                    emits: ['update:name', 'update:email', 'update:age', 'save', 'cancel'],
+                    template: `
+                        <div style="border: 2px solid #e74c3c; padding: 15px; border-radius: 8px; background: #fff;">
+                            <h5>用戶編輯器</h5>
+                            <div style="margin: 10px 0;">
+                                <label>姓名：</label>
+                                <input 
+                                    :value="name" 
+                                    @input="$emit('update:name', $event.target.value)"
+                                    :readonly="readonly"
+                                    :style="readonly ? 'background: #f5f5f5' : ''"
+                                >
+                            </div>
+                            <div style="margin: 10px 0;">
+                                <label>郵箱：</label>
+                                <input 
+                                    :value="email" 
+                                    @input="$emit('update:email', $event.target.value)"
+                                    :readonly="readonly"
+                                    :style="readonly ? 'background: #f5f5f5' : ''"
+                                >
+                            </div>
+                            <div style="margin: 10px 0;">
+                                <label>年齡：</label>
+                                <input 
+                                    type="number" 
+                                    :value="age" 
+                                    @input="$emit('update:age', Number($event.target.value))"
+                                    :readonly="readonly"
+                                    :style="readonly ? 'background: #f5f5f5' : ''"
+                                >
+                            </div>
+                            <div style="margin: 10px 0;" v-if="!readonly">
+                                <button @click="handleSave" :disabled="!isValid" :style="!isValid ? 'opacity: 0.5' : ''">
+                                    💾 保存
+                                </button>
+                                <button @click="$emit('cancel')" style="margin-left: 5px;">
+                                    ❌ 取消
+                                </button>
+                            </div>
+                            <div style="font-size: 0.9em; color: #666;">
+                                表單狀態：{{ isValid ? '✅ 有效' : '❌ 無效' }}
+                            </div>
+                        </div>
+                    `,
+                    setup(props, { emit, expose }) {
+                        const isValid = computed(() => 
+                            props.name && props.name.length > 0 && 
+                            props.email && props.email.includes('@') && 
+                            props.age && props.age > 0
+                        )
+
+                        function handleSave() {
+                            if (isValid.value) {
+                                emit('save', {
+                                    name: props.name,
+                                    email: props.email,
+                                    age: props.age
+                                })
+                            }
+                        }
+
+                        // 模擬 defineExpose
+                        expose({
+                            isValid,
+                            save: handleSave
+                        })
+
+                        return {
+                            isValid,
+                            handleSave
+                        }
+                    }
+                })
+            }
+        }).mount('#app8')
+    </script>
+</body>
+</html>

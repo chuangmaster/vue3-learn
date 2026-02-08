@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>03 - 計算屬性與監聽器</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .example {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #8e44ad;
+            border-radius: 5px;
+            background: #faf5ff;
+        }
+        .code {
+            background: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+        }
+        button {
+            background: #8e44ad;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #7d3c98;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px;
+        }
+        .highlight {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .warning {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .info-box {
+            background: #e8f4fd;
+            border: 1px solid #b3d7ff;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .performance-tip {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 第三課：計算屬性與監聽器</h1>
+        
+        <h2>💭 什麼是計算屬性？</h2>
+        <p>計算屬性是基於其他響應式數據計算得出的值，具有緩存特性，只有依賴變化時才重新計算。</p>
+        
+        <!-- 範例 1：基本計算屬性 -->
+        <div class="example">
+            <h3>範例 1：基本計算屬性 (computed)</h3>
+            <div id="app1"></div>
+            <div class="code">
+import { ref, computed } from 'vue'
+
+setup() {
+  const firstName = ref('張')
+  const lastName = ref('小明')
+  
+  // 計算屬性：自動依賴 firstName 和 lastName
+  const fullName = computed(() => {
+    console.log('計算 fullName') // 只在依賴變化時執行
+    return firstName.value + ' ' + lastName.value
+  })
+  
+  return {
+    firstName,
+    lastName,
+    fullName  // fullName 是只讀的
+  }
+}</div>
+            
+            <div class="performance-tip">
+                <strong>⚡ 性能優勢：</strong>計算屬性有緩存！多次訪問 fullName 只會計算一次，直到依賴變化。
+            </div>
+        </div>
+        
+        <!-- 範例 2：複雜計算邏輯 -->
+        <div class="example">
+            <h3>範例 2：複雜計算邏輯</h3>
+            <div id="app2"></div>
+            <div class="code">
+setup() {
+  const numbers = ref([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+  
+  // 複雜計算：統計分析
+  const statistics = computed(() => {
+    const nums = numbers.value
+    return {
+      count: nums.length,
+      sum: nums.reduce((a, b) => a + b, 0),
+      average: nums.reduce((a, b) => a + b, 0) / nums.length,
+      even: nums.filter(n => n % 2 === 0),
+      odd: nums.filter(n => n % 2 !== 0)
+    }
+  })
+  
+  return { numbers, statistics }
+}</div>
+        </div>
+        
+        <!-- 範例 3：可寫計算屬性 -->
+        <div class="example">
+            <h3>範例 3：可寫計算屬性 (get/set)</h3>
+            <div id="app3"></div>
+            <div class="code">
+setup() {
+  const firstName = ref('王')
+  const lastName = ref('小華')
+  
+  // 可寫計算屬性
+  const fullName = computed({
+    get() {
+      return firstName.value + ' ' + lastName.value
+    },
+    set(newValue) {
+      const names = newValue.split(' ')
+      firstName.value = names[0]
+      lastName.value = names[1]
+    }
+  })
+  
+  return { firstName, lastName, fullName }
+}</div>
+            
+            <div class="highlight">
+                <strong>💡 可寫計算屬性：</strong>提供 get 和 set 方法，可以像普通數據一樣賦值！
+            </div>
+        </div>
+        
+        <!-- 範例 4：基本 watch -->
+        <div class="example">
+            <h3>範例 4：監聽器基礎 (watch)</h3>
+            <div id="app4"></div>
+            <div class="code">
+import { ref, watch } from 'vue'
+
+setup() {
+  const count = ref(0)
+  const message = ref('')
+  
+  // 監聽單個 ref
+  watch(count, (newValue, oldValue) => {
+    console.log(`count 從 ${oldValue} 變為 ${newValue}`)
+    if (newValue > 5) {
+      message.value = '數字太大了！'
+    } else {
+      message.value = ''
+    }
+  })
+  
+  return { count, message }
+}</div>
+            
+            <div class="info-box">
+                <strong>🔍 watch vs computed：</strong><br>
+                • <strong>computed</strong>：計算新值，有緩存<br>
+                • <strong>watch</strong>：監聽變化，執行副作用（API調接、logging等）
+            </div>
+        </div>
+        
+        <!-- 範例 5：監聽多個源 -->
+        <div class="example">
+            <h3>範例 5：監聽多個數據源</h3>
+            <div id="app5"></div>
+            <div class="code">
+setup() {
+  const x = ref(0)
+  const y = ref(0)
+  const logs = ref([])
+  
+  // 監聽多個源
+  watch([x, y], ([newX, newY], [oldX, oldY]) => {
+    const log = `座標從 (${oldX}, ${oldY}) 移動到 (${newX}, ${newY})`
+    logs.value.push(log)
+    
+    // 保持日誌不超過 5 條
+    if (logs.value.length > 5) {
+      logs.value.shift()
+    }
+  })
+  
+  return { x, y, logs }
+}</div>
+        </div>
+        
+        <!-- 範例 6：監聽 reactive 對象 -->
+        <div class="example">
+            <h3>範例 6：監聽 reactive 對象</h3>
+            <div id="app6"></div>
+            <div class="code">
+import { reactive, watch } from 'vue'
+
+setup() {
+  const user = reactive({
+    name: '小明',
+    age: 25,
+    profile: {
+      email: 'xiaoming@example.com'
+    }
+  })
+  
+  const changes = ref([])
+  
+  // 深度監聽整個對象
+  watch(user, (newUser) => {
+    changes.value.push({
+      time: new Date().toLocaleTimeString(),
+      data: JSON.stringify(newUser, null, 2)
+    })
+  }, { deep: true })  // 深度監聽
+  
+  return { user, changes }
+}</div>
+            
+            <div class="warning">
+                <strong>⚠️ 注意：</strong>監聽 reactive 對象時，預設就是深度監聽，oldValue 和 newValue 會是同一個對象！
+            </div>
+        </div>
+        
+        <!-- 範例 7：watchEffect -->
+        <div class="example">
+            <h3>範例 7：watchEffect - 自動依賴追踪</h3>
+            <div id="app7"></div>
+            <div class="code">
+import { ref, watchEffect } from 'vue'
+
+setup() {
+  const count = ref(0)
+  const name = ref('Vue 3')
+  const logs = ref([])
+  
+  // watchEffect：自動追踪依賴
+  watchEffect(() => {
+    // 自動監聽這裡用到的所有響應式數據
+    const log = `${name.value} 的計數是 ${count.value}`
+    logs.value.push(log)
+    console.log(log)
+    
+    // 清理日誌
+    if (logs.value.length > 8) {
+      logs.value = logs.value.slice(-5)
+    }
+  })
+  
+  return { count, name, logs }
+}</div>
+            
+            <div class="highlight">
+                <strong>✨ watchEffect vs watch：</strong><br>
+                • <strong>watchEffect</strong>：自動追踪依賴，立即執行<br>
+                • <strong>watch</strong>：明確指定監聽源，懶執行
+            </div>
+        </div>
+        
+        <!-- 範例 8：高級監聽選項 -->
+        <div class="example">
+            <h3>範例 8：watch 的高級選項</h3>
+            <div id="app8"></div>
+            <div class="code">
+setup() {
+  const query = ref('')
+  const results = ref([])
+  
+  // 高級監聽選項
+  watch(query, async (newQuery) => {
+    if (!newQuery) {
+      results.value = []
+      return
+    }
+    
+    // 模擬 API 搜索
+    results.value = ['搜索中...']
+    
+    // 模擬異步搜索
+    setTimeout(() => {
+      results.value = [
+        `"${newQuery}" 相關結果 1`,
+        `"${newQuery}" 相關結果 2`,
+        `"${newQuery}" 相關結果 3`
+      ]
+    }, 800)
+  }, {
+    immediate: false,  // 是否立即執行
+    deep: false,       // 是否深度監聽
+    flush: 'post'      // 執行時機：'pre' | 'post' | 'sync'
+  })
+  
+  return { query, results }
+}</div>
+            
+            <div class="info-box">
+                <strong>🛠️ 監聽選項：</strong><br>
+                • <code>immediate</code>：是否立即執行一次<br>
+                • <code>deep</code>：是否深度監聽對象<br>
+                • <code>flush</code>：執行時機（pre/post/sync）
+            </div>
+        </div>
+        
+        <h2>📖 重點總結</h2>
+        <ul>
+            <li><strong>computed()</strong>：計算屬性，有緩存，自動依賴追踪</li>
+            <li><strong>watch()</strong>：監聽特定數據源的變化</li>
+            <li><strong>watchEffect()</strong>：自動依賴追踪的監聽器</li>
+            <li><strong>選擇原則</strong>：計算新值用 computed，執行副作用用 watch</li>
+        </ul>
+        
+        <h2>🎯 下一步</h2>
+        <p>現在你已經掌握了計算屬性和監聽器！接下來學習：</p>
+        <ul>
+            <li><a href="02-reactive-refs.html">← 上一課：響應式系統</a></li>
+            <li><a href="04-lifecycle.html">下一課：生命週期鉤子 →</a></li>
+        </ul>
+    </div>
+
+    <script>
+        const { createApp, ref, reactive, computed, watch, watchEffect } = Vue
+        
+        // 範例 1：基本計算屬性
+        createApp({
+            template: `
+                <div>
+                    <p>
+                        <input v-model="firstName" placeholder="姓">
+                        <input v-model="lastName" placeholder="名">
+                    </p>
+                    <h4>全名：{{ fullName }}</h4>
+                    <p><small>修改姓名看計算屬性的自動更新</small></p>
+                </div>
+            `,
+            setup() {
+                const firstName = ref('張')
+                const lastName = ref('小明')
+                
+                const fullName = computed(() => {
+                    console.log('正在計算 fullName...')
+                    return firstName.value + ' ' + lastName.value
+                })
+                
+                return {
+                    firstName,
+                    lastName,
+                    fullName
+                }
+            }
+        }).mount('#app1')
+        
+        // 範例 2：複雜計算
+        createApp({
+            template: `
+                <div>
+                    <h4>數字列表：{{ numbers.join(', ') }}</h4>
+                    <button @click="addRandomNumber">添加隨機數</button>
+                    <button @click="removeLastNumber">移除最後一個</button>
+                    
+                    <h4>統計分析：</h4>
+                    <p>總數：{{ statistics.count }}</p>
+                    <p>總和：{{ statistics.sum }}</p>
+                    <p>平均值：{{ statistics.average.toFixed(2) }}</p>
+                    <p>偶數：{{ statistics.even.join(', ') }}</p>
+                    <p>奇數：{{ statistics.odd.join(', ') }}</p>
+                </div>
+            `,
+            setup() {
+                const numbers = ref([1, 2, 3, 4, 5])
+                
+                const statistics = computed(() => {
+                    const nums = numbers.value
+                    if (nums.length === 0) {
+                        return { count: 0, sum: 0, average: 0, even: [], odd: [] }
+                    }
+                    
+                    const sum = nums.reduce((a, b) => a + b, 0)
+                    return {
+                        count: nums.length,
+                        sum,
+                        average: sum / nums.length,
+                        even: nums.filter(n => n % 2 === 0),
+                        odd: nums.filter(n => n % 2 !== 0)
+                    }
+                })
+                
+                function addRandomNumber() {
+                    const randomNum = Math.floor(Math.random() * 20) + 1
+                    numbers.value.push(randomNum)
+                }
+                
+                function removeLastNumber() {
+                    if (numbers.value.length > 0) {
+                        numbers.value.pop()
+                    }
+                }
+                
+                return {
+                    numbers,
+                    statistics,
+                    addRandomNumber,
+                    removeLastNumber
+                }
+            }
+        }).mount('#app2')
+        
+        // 範例 3：可寫計算屬性
+        createApp({
+            template: `
+                <div>
+                    <p>
+                        姓：<input v-model="firstName">
+                        名：<input v-model="lastName">
+                    </p>
+                    <p>全名：<input v-model="fullName"></p>
+                    <h4>結果：{{ fullName }}</h4>
+                    <p><small>試試直接在全名輸入框輸入 "李 小美"</small></p>
+                </div>
+            `,
+            setup() {
+                const firstName = ref('王')
+                const lastName = ref('小華')
+                
+                const fullName = computed({
+                    get() {
+                        return firstName.value + ' ' + lastName.value
+                    },
+                    set(newValue) {
+                        const names = newValue.split(' ')
+                        if (names.length >= 2) {
+                            firstName.value = names[0]
+                            lastName.value = names[1]
+                        }
+                    }
+                })
+                
+                return {
+                    firstName,
+                    lastName,
+                    fullName
+                }
+            }
+        }).mount('#app3')
+        
+        // 範例 4：基本 watch
+        createApp({
+            template: `
+                <div>
+                    <p>計數：{{ count }}</p>
+                    <button @click="count++">+1</button>
+                    <button @click="count--">-1</button>
+                    <button @click="count = 0">重置</button>
+                    <p v-if="message" style="color: red;">{{ message }}</p>
+                    <p><small>數字超過 5 時會顯示警告</small></p>
+                </div>
+            `,
+            setup() {
+                const count = ref(0)
+                const message = ref('')
+                
+                watch(count, (newValue, oldValue) => {
+                    console.log(`count 從 ${oldValue} 變為 ${newValue}`)
+                    if (newValue > 5) {
+                        message.value = '數字太大了！'
+                    } else if (newValue < 0) {
+                        message.value = '數字不能為負！'
+                    } else {
+                        message.value = ''
+                    }
+                })
+                
+                return {
+                    count,
+                    message
+                }
+            }
+        }).mount('#app4')
+        
+        // 範例 5：監聽多個源
+        createApp({
+            template: `
+                <div>
+                    <p>
+                        X: <input type="number" v-model.number="x" style="width: 60px;">
+                        Y: <input type="number" v-model.number="y" style="width: 60px;">
+                    </p>
+                    <p>當前座標：({{ x }}, {{ y }})</p>
+                    <h4>移動日誌：</h4>
+                    <div v-for="log in logs" :key="log" style="font-size: 0.9em; margin: 2px 0;">
+                        {{ log }}
+                    </div>
+                </div>
+            `,
+            setup() {
+                const x = ref(0)
+                const y = ref(0)
+                const logs = ref([])
+                
+                watch([x, y], ([newX, newY], [oldX, oldY]) => {
+                    if (oldX !== undefined && oldY !== undefined) {
+                        const log = `座標從 (${oldX}, ${oldY}) 移動到 (${newX}, ${newY})`
+                        logs.value.unshift(log)
+                        
+                        if (logs.value.length > 5) {
+                            logs.value = logs.value.slice(0, 5)
+                        }
+                    }
+                })
+                
+                return { x, y, logs }
+            }
+        }).mount('#app5')
+        
+        // 範例 6：監聽 reactive 對象
+        createApp({
+            template: `
+                <div>
+                    <h4>用戶資訊：</h4>
+                    <p>
+                        姓名：<input v-model="user.name">
+                        年齡：<input type="number" v-model.number="user.age">
+                    </p>
+                    <p>Email：<input v-model="user.profile.email"></p>
+                    
+                    <h4>變化記錄：</h4>
+                    <div v-for="change in changes.slice(-3)" :key="change.time" 
+                         style="font-size: 0.8em; margin: 5px 0; padding: 5px; background: #f0f0f0;">
+                        {{ change.time }}: 對象已變化
+                    </div>
+                </div>
+            `,
+            setup() {
+                const user = reactive({
+                    name: '小明',
+                    age: 25,
+                    profile: {
+                        email: 'xiaoming@example.com'
+                    }
+                })
+                
+                const changes = ref([])
+                
+                watch(user, () => {
+                    changes.value.push({
+                        time: new Date().toLocaleTimeString(),
+                        data: { ...user }
+                    })
+                    
+                    if (changes.value.length > 10) {
+                        changes.value = changes.value.slice(-5)
+                    }
+                }, { deep: true })
+                
+                return { user, changes }
+            }
+        }).mount('#app6')
+        
+        // 範例 7：watchEffect
+        createApp({
+            template: `
+                <div>
+                    <p>
+                        名稱：<input v-model="name">
+                        計數：<input type="number" v-model.number="count">
+                    </p>
+                    <button @click="count++">+1</button>
+                    <button @click="count--">-1</button>
+                    
+                    <h4>自動追蹤日誌：</h4>
+                    <div v-for="log in logs.slice(-5)" :key="log" 
+                         style="font-size: 0.9em; margin: 2px 0;">
+                        {{ log }}
+                    </div>
+                </div>
+            `,
+            setup() {
+                const count = ref(0)
+                const name = ref('Vue 3')
+                const logs = ref([])
+                
+                watchEffect(() => {
+                    const log = `${new Date().toLocaleTimeString()}: ${name.value} 的計數是 ${count.value}`
+                    logs.value.push(log)
+                    console.log('watchEffect:', log)
+                    
+                    if (logs.value.length > 10) {
+                        logs.value = logs.value.slice(-5)
+                    }
+                })
+                
+                return { count, name, logs }
+            }
+        }).mount('#app7')
+        
+        // 範例 8：高級監聽選項
+        createApp({
+            template: `
+                <div>
+                    <p>搜索：<input v-model="query" placeholder="輸入搜索關鍵字"></p>
+                    
+                    <h4>搜索結果：</h4>
+                    <ul v-if="results.length > 0">
+                        <li v-for="result in results" :key="result">{{ result }}</li>
+                    </ul>
+                    <p v-else style="color: #666;">請輸入關鍵字開始搜索</p>
+                </div>
+            `,
+            setup() {
+                const query = ref('')
+                const results = ref([])
+                
+                watch(query, async (newQuery) => {
+                    if (!newQuery.trim()) {
+                        results.value = []
+                        return
+                    }
+                    
+                    results.value = ['🔍 搜索中...']
+                    
+                    // 模擬異步搜索延遲
+                    await new Promise(resolve => setTimeout(resolve, 500))
+                    
+                    results.value = [
+                        `📄 "${newQuery}" 相關文檔`,
+                        `🔧 "${newQuery}" 相關工具`,
+                        `📚 "${newQuery}" 相關教程`,
+                        `💡 "${newQuery}" 相關技巧`
+                    ]
+                }, {
+                    flush: 'post'
+                })
+                
+                return { query, results }
+            }
+        }).mount('#app8')
+    </script>
+</body>
+</html>

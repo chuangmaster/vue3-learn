@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vue 3 學習教程 - 首頁</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .intro {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .lesson-grid {
+            display: grid;
+            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        .lesson-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .lesson-card:hover {
+            border-color: #4CAF50;
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.2);
+        }
+
+        .lesson-number {
+            background: #4CAF50;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .lesson-title {
+            color: #2c3e50;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .lesson-description {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .lesson-topics {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .topic-tag {
+            background: #e9ecef;
+            color: #495057;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .progress-section {
+            background: #e8f5e8;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .progress-bar {
+            background: #dee2e6;
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            border-top: 1px solid #dee2e6;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            background: #45a049;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .completed {
+            border-color: #28a745;
+            background: #f8fff9;
+        }
+
+        .completed .lesson-number {
+            background: #28a745;
+        }
+
+        .current {
+            border-color: #ffc107;
+            background: #fffbf0;
+        }
+
+        .current .lesson-number {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .lesson-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Vue 3 學習教程</h1>
+            <p>Composition API · Composables · 現代化的 Vue 開發</p>
+        </div>
+
+        <div class="content">
+            <div class="intro">
+                <h2>📚 歡迎來到 Vue 3 的學習之旅！</h2>
+                <p>這是一個循序漸進的 Vue 3 學習教程，專注於 <strong>Composition API</strong> 和 <strong>Composables</strong> 的學習。每個課程都包含詳細的說明、實例代碼和互動演示。</p>
+                <br>
+                <p><strong>🎯 學習目標：</strong>讓你完全掌握 Vue 3 的新特性，能夠使用現代化的方式開發 Vue 應用。</p>
+            </div>
+
+            <div id="app">
+                <div class="progress-section">
+                    <h3>📊 學習進度</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" :style="{width: progress + '%'}"></div>
+                    </div>
+                    <p>{{ completedLessons }} / {{ totalLessons }} 課程完成 ({{ Math.round(progress) }}%)</p>
+                </div>
+
+                <div class="lesson-grid">
+                    <div 
+                        v-for="lesson in lessons" 
+                        :key="lesson.id"
+                        :class="[
+                            'lesson-card',
+                            { 'completed': lesson.completed },
+                            { 'current': lesson.current }
+                        ]"
+                        @click="goToLesson(lesson.file)"
+                    >
+                        <div class="lesson-number">{{ lesson.id }}</div>
+                        <div class="lesson-title">{{ lesson.title }}</div>
+                        <div class="lesson-description">{{ lesson.description }}</div>
+                        <div class="lesson-topics">
+                            <span 
+                                v-for="topic in lesson.topics" 
+                                :key="topic" 
+                                class="topic-tag"
+                            >
+                                {{ topic }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px; text-align: center;">
+                    <h3>🛠️ 快速開始</h3>
+                    <p style="margin: 15px 0;">選擇你的學習方式：</p>
+                    <a href="examples/01-basic-composition-api.html" class="btn">🎯 開始第一課</a>
+                    <a href="README.md" class="btn btn-secondary" target="_blank">📖 閱讀文檔</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>💡 <strong>學習小貼士：</strong>每完成一課建議動手實踐，鞏固所學知識。</p>
+            <p>🔗 <strong>相關資源：</strong> 
+                <a href="https://vuejs.org/" target="_blank">Vue.js 官網</a> | 
+                <a href="https://composition-api.vuejs.org/" target="_blank">Composition API 文檔</a> |
+                <a href="https://vueuse.org/" target="_blank">VueUse</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted } = Vue
+
+        createApp({
+            setup() {
+                const lessons = ref([
+                    {
+                        id: 1,
+                        title: "基礎 Composition API",
+                        description: "學習 setup 函數、ref()、reactive() 等基本概念",
+                        topics: ["setup()", "ref", "reactive", "基本語法"],
+                        file: "examples/01-basic-composition-api.html",
+                        completed: false,
+                        current: true
+                    },
+                    {
+                        id: 2,
+                        title: "響應式系統深入",
+                        description: "深入理解 Vue 3 的響應式系統和相關 API",
+                        topics: ["響應式原理", "toRefs", "isRef", "unref"],
+                        file: "examples/02-reactive-refs.html",
+                        completed: false,
+                        current: false
+                    },
+                    {
+                        id: 3,
+                        title: "計算屬性與監聽器",
+                        description: "掌握 computed、watch、watchEffect 的使用",
+                        topics: ["computed", "watch", "watchEffect", "副作用"],
+                        file: "examples/03-computed-watch.html",
+                        completed: false,
+                        current: false
+                    },
+                    {
+                        id: 4,
+                        title: "生命週期鉤子",
+                        description: "學習 Composition API 中的生命週期管理",
+                        topics: ["onMounted", "onUnmounted", "生命週期", "資源清理"],
+                        file: "examples/04-lifecycle.html",
+                        completed: false,
+                        current: false
+                    },
+                    {
+                        id: 5,
+                        title: "Composables 實戰",
+                        description: "創建和使用 Composables 進行邏輯復用",
+                        topics: ["useCounter", "useMouse", "邏輯復用", "自定義 hooks"],
+                        file: "examples/05-composables.html",
+                        completed: false,
+                        current: false
+                    },
+                    {
+                        id: 6,
+                        title: "進階特性探索",
+                        description: "Provide/Inject、Teleport、Suspense 等高級特性",
+                        topics: ["Provide/Inject", "Teleport", "Suspense", "Fragment"],
+                        file: "examples/06-advanced.html",
+                        completed: false,
+                        current: false
+                    },
+                    {
+                        id: 7,
+                        title: "Script Setup 語法糖",
+                        description: "學習 defineModel、defineProps 等現代化編譯器宏",
+                        topics: ["defineProps", "defineEmits", "defineModel", "defineExpose"],
+                        file: "examples/07-script-setup.html",
+                        completed: false,
+                        current: false
+                    }
+                ])
+
+                // 從 localStorage 讀取進度
+                onMounted(() => {
+                    const savedProgress = localStorage.getItem('vue3-tutorial-progress')
+                    if (savedProgress) {
+                        const progress = JSON.parse(savedProgress)
+                        progress.forEach((completed, index) => {
+                            if (lessons.value[index]) {
+                                lessons.value[index].completed = completed
+                            }
+                        })
+                        updateCurrentLesson()
+                    }
+                })
+
+                const totalLessons = computed(() => lessons.value.length)
+                const completedLessons = computed(() => 
+                    lessons.value.filter(lesson => lesson.completed).length
+                )
+                const progress = computed(() => 
+                    (completedLessons.value / totalLessons.value) * 100
+                )
+
+                function updateCurrentLesson() {
+                    lessons.value.forEach((lesson, index) => {
+                        lesson.current = false
+                    })
+                    
+                    const firstIncomplete = lessons.value.find(lesson => !lesson.completed)
+                    if (firstIncomplete) {
+                        firstIncomplete.current = true
+                    } else if (lessons.value.length > 0) {
+                        lessons.value[lessons.value.length - 1].current = true
+                    }
+                }
+
+                function goToLesson(file) {
+                    window.open(file, '_blank')
+                }
+
+                function markLessonCompleted(lessonId) {
+                    const lesson = lessons.value.find(l => l.id === lessonId)
+                    if (lesson) {
+                        lesson.completed = true
+                        saveProgress()
+                        updateCurrentLesson()
+                    }
+                }
+
+                function saveProgress() {
+                    const progress = lessons.value.map(lesson => lesson.completed)
+                    localStorage.setItem('vue3-tutorial-progress', JSON.stringify(progress))
+                }
+
+                // 為了演示，自動標記一些進度
+                setTimeout(() => {
+                    // 可以根據實際情況調整
+                }, 1000)
+
+                return {
+                    lessons,
+                    totalLessons,
+                    completedLessons,
+                    progress,
+                    goToLesson,
+                    markLessonCompleted
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>

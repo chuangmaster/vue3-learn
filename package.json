@@ -1,0 +1,26 @@
+{
+  "name": "vue3-composable-tutorial",
+  "version": "1.0.0",
+  "description": "Vue 3 Composition API 與 Composables 學習教程",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve .",
+    "start": "npx serve .",
+    "preview": "npx serve ."
+  },
+  "keywords": [
+    "vue3",
+    "composition-api",
+    "composables",
+    "tutorial",
+    "chinese"
+  ],
+  "author": "Vue 3 Tutorial",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.0.0"
+  },
+  "dependencies": {
+    "vue": "^3.0.0"
+  }
+}
